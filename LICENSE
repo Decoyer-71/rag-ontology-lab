@@ -1,0 +1,33 @@
+MIT License
+
+Copyright (c) 2026 <저장소 소유자 이름을 여기에 적으십시오>
+
+⚠ 위 자리표시자를 실제 이름(또는 GitHub 사용자명)으로 바꾸십시오.
+   포트폴리오로 제출하기 전에 반드시 채웁니다 (docs/PORTFOLIO.md §G).
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+데이터 라이선스는 별도입니다 — data/DATA_CARD.md 를 보십시오.
+
+  · data/synthetic/  — 이 저장소가 만든 합성 데이터. 자유 사용
+  · data/external/   — ⚠⚠ 외부 데이터. 각 출처의 라이선스를 따릅니다.
+                        KorQuAD 1.0 은 CC BY-ND 2.0 KR (재배포 금지)이므로
+                        이 저장소에 포함되어 있지 않습니다.

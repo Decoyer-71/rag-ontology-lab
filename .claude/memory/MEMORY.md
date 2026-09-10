@@ -1,0 +1,8 @@
+- [사용자가 코드를 쓴다](learner-writes-code.md) — src/raglab 본체는 Claude 가 짜지 않는다
+- [답이 아니라 힌트](hint-not-answer.md) — 4단계로 수위를 올린다. 정답 코드는 끝까지 안 준다
+- [개선은 기준선과 나란히](measure-with-baseline.md) — 좋아진 지표 하나만 보고하는 병
+- [성능이 좋으면 오염부터 의심](suspect-goldenset-contamination.md) — Recall 0.95 이상은 축하가 아니라 경보
+- [합성 데이터는 모든 곳에 표기](label-synthetic-data.md) — 합성 수치가 실세계 성능처럼 읽히는 것을 막는다
+- [파이썬은 .venv 전체 경로로](venv-full-path.md) — 시스템 python 은 MS Store 스텁이다
+- [윈도우 한글 인코딩 지뢰 셋](windows-encoding-traps.md) — ps1 BOM · 파이썬 stdout · Bash heredoc
+- [존댓말로 답한다](honorific-tone.md) — 사용자 응답과 산출물 본문은 존댓말

@@ -1,0 +1,83 @@
+{
+  "permissions": {
+    "allow": [
+      "Read",
+      "Glob",
+      "Grep",
+      "Bash(.venv/Scripts/python.exe *)",
+      "Bash(.venv/Scripts/pytest.exe *)",
+      "PowerShell(.venv\\Scripts\\python.exe *)",
+      "PowerShell(.venv\\Scripts\\pytest.exe *)",
+      "Bash(git status *)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(git add *)",
+      "PowerShell(git status *)",
+      "PowerShell(git diff *)",
+      "PowerShell(git log *)"
+    ],
+    "deny": [
+      "Read(./data/external/**)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard_handson.ps1\"",
+            "timeout": 30,
+            "statusMessage": "§5-T 가드: src/raglab 대필 차단"
+          }
+        ]
+      },
+      {
+        "matcher": "Read|Grep|Glob|Bash|PowerShell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard_spoiler.ps1\"",
+            "timeout": 30,
+            "statusMessage": "§3 가드: 미완료 단계 정답 열람 차단"
+          }
+        ]
+      },
+      {
+        "matcher": "SendUserFile|Artifact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard_claim.ps1\"",
+            "timeout": 30,
+            "statusMessage": "§3-S·§8 가드: 합성 표기·한계 절 확인"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File \"$CLAUDE_PROJECT_DIR/.claude/hooks/preflight.ps1\"",
+            "timeout": 60,
+            "statusMessage": "환경 자가진단: venv·의존성·훅·코퍼스·원격"
+          },
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File \"$CLAUDE_PROJECT_DIR/.claude/hooks/session_banner.ps1\"",
+            "timeout": 30
+          },
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File \"$CLAUDE_PROJECT_DIR/.claude/hooks/selftest.ps1\" -Quick",
+            "timeout": 120,
+            "statusMessage": "자가 시험: 대필 차단 훅이 실제로 동작하는지"
+          }
+        ]
+      }
+    ]
+  }
+}

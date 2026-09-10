@@ -1,0 +1,30 @@
+# 줄바꿈 규칙 — ⚠ 이 저장소는 여러 PC 를 오간다 (docs/SETUP.md)
+#
+# 명시하지 않으면 PC 마다 core.autocrlf 설정이 달라 **내용이 안 바뀌었는데 diff 가 뜬다.**
+# 그러면 git pull --rebase 가 매번 충돌하고, 무엇이 진짜 변경인지 안 보인다.
+
+# 기본 — 저장소에는 LF 로 보관하고 체크아웃 시 플랫폼에 맞춘다
+* text=auto eol=lf
+
+# ⚠⚠ PowerShell 훅은 CRLF 로 체크아웃한다.
+#   Windows PowerShell 5.1 이 실행하는 파일이고, BOM + CRLF 가 가장 안전한 조합이다.
+#   (BOM 이 없으면 한글이 cp949 로 읽혀 차단 사유가 깨진다 — CLAUDE.md §6 지뢰)
+*.ps1 text eol=crlf working-tree-encoding=UTF-8
+
+# 파이썬·문서·설정 — LF 고정
+*.py   text eol=lf
+*.md   text eol=lf
+*.yaml text eol=lf
+*.yml  text eol=lf
+*.json text eol=lf
+*.csv  text eol=lf
+*.txt  text eol=lf
+*.ini  text eol=lf
+*.html text eol=lf
+
+# 바이너리 — 손대지 않는다
+*.png binary
+*.jpg binary
+*.pdf binary
+*.npy binary
+*.npz binary

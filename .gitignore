@@ -1,0 +1,68 @@
+# ── 가상환경 ─────────────────────────────────────────────
+# 새 PC 에서는 docs/SETUP.md 대로 uv 로 다시 만든다
+.venv/
+venv/
+env/
+
+# ── 파이썬 ───────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# ── ⚠⚠ 외부 데이터 — 재배포 금지 ───────────────────────────
+# KorQuAD 1.0 은 CC BY-ND 2.0 KR 이다. 파생·재배포가 금지돼 있으므로
+# 이 저장소에 절대 커밋하지 않는다. 각자 data/fetch_korquad.py 로 받는다.
+# ⛔ 이 줄을 지우지 마라 (CLAUDE.md §6 지뢰 7)
+data/external/
+*.zip
+*.tar.gz
+
+# ── 대용량 산출물 ─────────────────────────────────────────
+# 인덱스·임베딩 캐시는 재생성 가능하므로 커밋하지 않는다
+outputs/cache/
+outputs/index/
+*.npy
+*.npz
+*.pkl
+*.faiss
+
+# ⚠ 단, 측정 결과 JSON 과 최종 HTML 리포트는 커밋한다.
+#   README 의 결과 표가 이 파일들을 근거로 삼기 때문이다 (CLAUDE.md §13-2)
+!outputs/metrics/*.json
+!outputs/*.html
+
+# ── 신경망 모델 가중치 (Stage 9) ──────────────────────────
+# 수백 MB~GB 다. 커밋하지 않는다
+models/
+*.safetensors
+*.bin
+*.onnx
+
+# ── OS · 편집기 ──────────────────────────────────────────
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*~
+
+# ── 비밀 ─────────────────────────────────────────────────
+# ⚠⚠ API 키가 여기 들어간다. 절대 커밋 금지
+.env
+.env.*
+!.env.example
+*.key
+secrets.json
+.claude/settings.local.json
+
+# ── 스크래치 ─────────────────────────────────────────────
+scratch/
+tmp/
+*.tmp
+*.log

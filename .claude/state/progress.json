@@ -1,0 +1,17 @@
+{
+  "_comment": "학습 진도 상태. 훅(guard_spoiler, session_banner)과 스킬(next-step, checkpoint)이 읽는다. 손으로 고치지 말고 checkpoint 스킬로 갱신한다.",
+  "schema_version": 1,
+  "total_stages": 12,
+  "current_stage": 0,
+  "current_title": "Stage 0 — 채점표부터 만든다 (골든셋 · 역량질문)",
+  "completed_stages": [],
+  "assumptions_unconfirmed": true,
+  "assumptions": {
+    "A1_corpus_domain": "한빛텔레콤 가상사례 (미확인 — CLAUDE.md §0-2)",
+    "A2_practice_mode": "Stage 1~5 빈칸 채우기 → Stage 6~11 백지 (미확인)",
+    "A3_stage9_procurement": "Stage 8 이후 판단 (미확인)"
+  },
+  "ghostwritten_files": [],
+  "last_updated": "2026-09-10",
+  "notes": "환경 구축만 완료. 학습 미착수 — 사용자 지시로 새 세션에서 시작한다."
+}

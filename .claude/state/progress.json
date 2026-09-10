@@ -5,13 +5,14 @@
   "current_stage": 0,
   "current_title": "Stage 0 — 채점표부터 만든다 (골든셋 · 역량질문)",
   "completed_stages": [],
-  "assumptions_unconfirmed": true,
-  "assumptions": {
-    "A1_corpus_domain": "한빛텔레콤 가상사례 (미확인 — CLAUDE.md §0-2)",
-    "A2_practice_mode": "Stage 1~5 빈칸 채우기 → Stage 6~11 백지 (미확인)",
-    "A3_stage9_procurement": "Stage 8 이후 판단 (미확인)"
-  },
+  "assumptions_unconfirmed": false,
   "ghostwritten_files": [],
   "last_updated": "2026-09-10",
-  "notes": "환경 구축만 완료. 학습 미착수 — 사용자 지시로 새 세션에서 시작한다."
+  "notes": "§0-2 확정 완료. Stage 0 은 채점표를 만드는 단계가 아니라 검수하는 단계다 — 골든셋 24문항이 이미 있고 테스트 8건이 통과한다. 사용자가 문항을 추가하게 한다.",
+  "decisions": {
+    "_confirmed": "2026-09-10",
+    "A1_corpus_domain": "한빛텔레콤 가상사례 (확정). data/synthetic/ 을 그대로 쓴다",
+    "A2_practice_mode": "Stage 1~5 빈칸 채우기 → Stage 6~11 백지 (확정)",
+    "A3_stage9_procurement": "Stage 8 을 끝낸 뒤 판단 (확정). 디스크가 아니라 측정 순서가 이유다"
+  }
 }

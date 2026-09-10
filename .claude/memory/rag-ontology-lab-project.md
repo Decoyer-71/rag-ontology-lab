@@ -15,4 +15,4 @@ metadata:
 
 **Why:** 학습자는 **트랜스포머 개념까지는 알고 RAG 내부는 표면적으로만** 안다. 이 두 줄이 모든 설명의 기준선이다. 비유는 트랜스포머 쪽에 걸고, IR 용어(BM25·MRR·재순위)는 첫 등장 시 풀이를 붙인다.
 
-**How to apply:** 규율 전문은 저장소의 `CLAUDE.md` 13개 절에 있고 세션마다 자동으로 읽힌다. ⚠⚠ `CLAUDE.md` §0-2 의 **미확정 가정 3건**(코퍼스 도메인 / 실습 강도 / Stage 9 조달 시점)이 아직 사용자 확인 전이다 — 새 세션 첫 턴에 묻고 결정으로 교체한다. 관련: [[learner-writes-code]] · [[measure-with-baseline]] · [[git-identity-yoon71]]
+**How to apply:** 규율 전문은 저장소의 `CLAUDE.md` 13개 절에 있고 세션마다 자동으로 읽힌다. ✅ `CLAUDE.md` §0-2 는 2026-09-10 에 확정됐다 — **코퍼스는 한빛텔레콤 가상사례**, 실습 강도는 Stage 1~5 빈칸 → 6~11 백지, Stage 9 신경망 임베딩은 Stage 8 이후 판단(디스크가 아니라 측정 순서가 이유). ⚠ 골든셋이 이미 있어 **Stage 0 은 「만들기」가 아니라 「검수하고 문항을 추가하기」**다. 관련: [[learner-writes-code]] · [[measure-with-baseline]] · [[review-gate-system]] · [[git-identity-yoon71]]

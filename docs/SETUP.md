@@ -204,8 +204,10 @@ cat .claude/state/progress.json
 
 `session_banner` 훅이 세션 시작 때 자동으로 보여 줍니다.
 
-⚠ `assumptions_unconfirmed` 가 `true` 면 `CLAUDE.md` §0-2 의 미확정 가정 3건이
-아직 확인되지 않은 상태입니다. **그 세션의 첫 과업입니다.**
+✅ `assumptions_unconfirmed` 는 **2026-09-10 에 `false` 가 됐습니다** — `CLAUDE.md` §0-2 의
+세 가지가 확정됐고 `decisions` 키에 들어 있습니다.
+
+⚠ 이 값이 다시 `true` 로 보이면 진도 파일이 옛 판이라는 뜻입니다. **먼저 `git pull` 하십시오.**
 
 ---
 

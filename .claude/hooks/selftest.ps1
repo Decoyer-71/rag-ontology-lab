@@ -304,6 +304,109 @@ finally {
 }
 
 # ═══════════════════════════════════════════════════════════════════════════
+#  guard_sync — 원격과 어긋났을 때 새 단계를 막는가 (§15)
+# ═══════════════════════════════════════════════════════════════════════════
+
+# ⚠⚠ 실제로 behind 상태를 만들려면 원격을 건드려야 한다. 그건 시험이 아니라 사고다.
+#    그래서 **가짜 판정 파일을 주입해** 상태만 흉내 낸다 (guard_review 와 같은 방식).
+
+$syncPath = Join-Path $root '.claude\state\sync_session.json'
+$syncBak  = $null
+if (Test-Path -LiteralPath $syncPath) {
+    $syncBak = Get-Content -LiteralPath $syncPath -Raw -Encoding UTF8
+}
+
+function Set-Sync([string]$State, [int]$Behind, [int]$Ahead) {
+    $obj = [ordered]@{
+        computed_at = (Get-Date).ToString('s')
+        branch      = 'main'
+        upstream    = 'origin/main'
+        behind      = $Behind
+        ahead       = $Ahead
+        fetch_ok    = $true
+        state       = $State
+    }
+    $json = $obj | ConvertTo-Json -Depth 6
+    [System.IO.File]::WriteAllText($syncPath, $json, (New-Object System.Text.UTF8Encoding($false)))
+}
+
+try {
+    # ── behind: 다른 PC 작업을 아직 안 받았다 → 새 단계 차단 ────────────────
+    Set-Sync 'behind' 3 0
+
+    Check "sync: behind 상태에서 next-step" (Invoke-Hook 'guard_sync.ps1' @{
+        tool_name  = 'Skill'
+        tool_input = @{ skill = 'next-step' }
+    }) 2
+
+    Check "sync: behind 상태에서 진도 전진" (Invoke-Hook 'guard_sync.ps1' @{
+        tool_name  = 'Edit'
+        tool_input = @{ file_path = "$root\.claude\state\progress.json"; old_string = 'a'; new_string = 'b' }
+    }) 2
+
+    # ⚠⚠ 데드락 방지 — 복습과 기록은 막히면 안 된다
+    Check "sync: behind 여도 복습 스킬은 통과" (Invoke-Hook 'guard_sync.ps1' @{
+        tool_name  = 'Skill'
+        tool_input = @{ skill = 'review' }
+    }) 0
+
+    Check "sync: behind 여도 PROGRESS.md 는 통과" (Invoke-Hook 'guard_sync.ps1' @{
+        tool_name  = 'Write'
+        tool_input = @{ file_path = "$root\docs\PROGRESS.md"; content = 'x' }
+    }) 0
+
+    # ── diverged: 이력이 갈라졌다 → 차단 ────────────────────────────────────
+    Set-Sync 'diverged' 2 1
+
+    Check "sync: diverged 상태에서 새 단계 강의" (Invoke-Hook 'guard_sync.ps1' @{
+        tool_name  = 'Write'
+        tool_input = @{ file_path = "$root\docs\stages\07-graph.md"; content = 'x' }
+    }) 2
+
+    # ── ahead: 푸시만 안 됐다 → **막지 않는다** ─────────────────────────────
+    # 떠나기 전에 할 일이지 지금 막을 일이 아니다. 여기서 막으면 작업 자체가 안 된다.
+    Set-Sync 'ahead' 0 4
+
+    Check "sync: ahead 는 막지 않는다" (Invoke-Hook 'guard_sync.ps1' @{
+        tool_name  = 'Skill'
+        tool_input = @{ skill = 'next-step' }
+    }) 0
+
+    # ── clean: 통과 ─────────────────────────────────────────────────────────
+    Set-Sync 'clean' 0 0
+
+    Check "sync: clean 은 통과" (Invoke-Hook 'guard_sync.ps1' @{
+        tool_name  = 'Write'
+        tool_input = @{ file_path = "$root\docs\stages\07-graph.md"; content = 'x' }
+    }) 0
+}
+finally {
+    if ($null -ne $syncBak) {
+        [System.IO.File]::WriteAllText($syncPath, $syncBak, (New-Object System.Text.UTF8Encoding($false)))
+    } else {
+        Remove-Item -LiteralPath $syncPath -Force -ErrorAction SilentlyContinue
+    }
+}
+
+# ⚠ 판정 파일이 아예 없을 때는 fail-open 이어야 한다 (오프라인·훅 미실행)
+$syncSaved = $null
+if (Test-Path -LiteralPath $syncPath) {
+    $syncSaved = Get-Content -LiteralPath $syncPath -Raw -Encoding UTF8
+    Remove-Item -LiteralPath $syncPath -Force -ErrorAction SilentlyContinue
+}
+try {
+    Check "sync: 판정 없으면 통과 (fail-open)" (Invoke-Hook 'guard_sync.ps1' @{
+        tool_name  = 'Skill'
+        tool_input = @{ skill = 'next-step' }
+    }) 0
+}
+finally {
+    if ($null -ne $syncSaved) {
+        [System.IO.File]::WriteAllText($syncPath, $syncSaved, (New-Object System.Text.UTF8Encoding($false)))
+    }
+}
+
+# ═══════════════════════════════════════════════════════════════════════════
 
 $total = $pass + $fail
 Write-Output "[selftest] $pass/$total 통과"

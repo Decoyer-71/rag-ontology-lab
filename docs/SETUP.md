@@ -223,11 +223,30 @@ git commit -m "Stage N: <능력 목표 한 줄>"
 git push
 ```
 
-⚠ **`progress.json` 이 충돌하기 쉽습니다.** 두 PC 에서 같은 단계를 진행하면 그렇습니다.
-충돌하면 **더 진행된 쪽**을 택하고 `completed_stages` 는 **합집합**으로 만듭니다.
+### ⭐ 잊어도 훅이 잡아 줍니다
 
-⚠ `outputs/metrics/*.json` 도 충돌할 수 있습니다. 이건 **측정값**이므로
-임의로 합치지 말고 **다시 측정**하십시오(§4 — 파생값을 측정값으로 두지 않는다).
+`sync_check` 훅이 세션 시작에 `git fetch` 로 상태를 재고, 어긋나 있으면
+`guard_sync` 가 **새 단계를 여는 것을 막습니다**(CLAUDE.md §15).
+
+| 상태 | 게이트 |
+|---|---|
+| 원격과 같음 | 통과 |
+| 푸시 안 됨(ahead) | ⚠ 경고만 — **떠나기 전에 푸시하십시오** |
+| 원격이 앞섬(behind) · 갈라짐(diverged) | ⛔ **차단.** `git pull --rebase` 먼저 |
+
+⚠ 복습·힌트·기록은 막히지 않습니다. 막는 것은 새 단계를 여는 행위뿐입니다.
+
+### ⚠⚠ 충돌하면 — 파일마다 규칙이 다릅니다
+
+| 파일 | 규칙 |
+|---|---|
+| `.claude/state/progress.json` | 더 진행된 쪽. `completed_stages` 는 **합집합** |
+| `.claude/state/review.json` | ⚠⚠ **합칠 수 없습니다.** 더 최근에 복습한 쪽을 택하고, 애매하면 그 카드만 **만기로 되돌립니다** — 틀리게 합치느니 한 번 더 인출하는 편이 쌉니다 |
+| `outputs/metrics/review_log.json` | `entries` 는 **양쪽을 다 남깁니다.** 인출 기록을 지우면 복습 주기를 데이터로 고칠 근거가 사라집니다 |
+| `outputs/metrics/stageNN.json` | ⚠ 임의로 합치지 말고 **다시 측정**하십시오(§4 — 파생값을 측정값으로 두지 않는다) |
+| `docs/PROGRESS.md` | 양쪽을 다 남깁니다. **막힌 지점이 §13-3 의 재료입니다** |
+
+⚠ `*_session.json`(복습·동기화 판정)은 커밋되지 않습니다. 세션마다 다시 계산되므로 신경 쓸 필요가 없습니다.
 
 ---
 
@@ -242,3 +261,6 @@ git push
 | 훅 메시지가 깨져 나옴 | `.ps1` BOM 없음 | §6 참고 |
 | Stage 0 테스트 실패 | 코퍼스 손상 | `data/make_corpus.py` 재실행 |
 | `guard_spoiler` 가 모든 걸 막음 | `progress.json` 없음 | 저장소에서 복구 |
+| `guard_sync` 가 계속 막음 | 원격이 앞서 있거나 갈라짐 | `git pull --rebase` 후 `.claude\hooks\sync_check.ps1` 재실행 |
+| `guard_review` 가 계속 막음 | 밀린 복습 카드 | `review` 스킬로 도십시오. 정말 못 하면 `review.py skip` (기록 남음) |
+| 세션 시작이 1초쯤 느려짐 | `sync_check` 의 `git fetch` | 정상입니다. 오프라인이면 즉시 실패하고 게이트를 엽니다 |

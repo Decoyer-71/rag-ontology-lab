@@ -45,6 +45,17 @@
         ]
       },
       {
+        "matcher": "Write|Edit|NotebookEdit|Skill",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard_sync.ps1\"",
+            "timeout": 30,
+            "statusMessage": "§15 가드: 원격과 어긋나면 새 단계 차단"
+          }
+        ]
+      },
+      {
         "matcher": "Read|Grep|Glob|Bash|PowerShell",
         "hooks": [
           {
@@ -92,6 +103,12 @@
             "command": "powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File \"$CLAUDE_PROJECT_DIR/.claude/hooks/review_due.ps1\"",
             "timeout": 60,
             "statusMessage": "§14: 공백기간 반영 복습 계획"
+          },
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File \"$CLAUDE_PROJECT_DIR/.claude/hooks/sync_check.ps1\"",
+            "timeout": 45,
+            "statusMessage": "§15: 원격 동기화 상태 확인 (PC 두 대)"
           },
           {
             "type": "command",

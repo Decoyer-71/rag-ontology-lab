@@ -74,12 +74,14 @@ D:\projects\rag-ontology-lab\
 │   ├── skills\                    ← next-step · hint · checkpoint · **review** · viz-build · repo-publish
 │   ├── hooks\                     ← ⭐ guard_handson (대필 차단) · guard_spoiler · guard_claim
 │   │                                 ⭐ **guard_review** (복습 게이트) · review_due · commit_watch (§14)
+│   │                                 ⭐ **guard_sync** (동기화 게이트) · sync_check (§15)
 │   ├── memory\                    ← ⚠ **이동용 사본이다.** Claude 가 실제로 읽는 곳은
 │   │                                 `%USERPROFILE%\.claude\projects\...` → `docs/SETUP.md`
 │   └── state\
 │       ├── progress.json          ← ⭐ 진도 상태. 훅과 스킬이 이 파일을 읽는다
 │       ├── review.json            ← ⭐ 복습 카드·간격·건너뛴 기록 (§14)
-│       └── review_session.json    ← 이번 세션 복습 계획과 **게이트**. 세션마다 다시 계산된다
+│       ├── review_session.json    ← 이번 세션 복습 계획과 **게이트**. 세션마다 다시 계산된다
+│       └── sync_session.json      ← 원격 동기화 판정 (§15). ⚠ 커밋 안 함 — PC 마다 다르다
 ├── docs\
 │   ├── CURRICULUM.md              ← 12단계 전체 설계도
 │   ├── PROGRESS.md                ← 사람이 읽는 진도표 + 막힌 지점 기록 (§13 재료)
@@ -377,7 +379,9 @@ Claude 는 뼈대와 테스트까지. **본체는 사용자다.** 막히면 `hin
 | 항목 | 상태 |
 |---|---|
 | 환경 구축 | ✅ 완료 (2026-09-10). venv · `.claude` · 코퍼스 · 뼈대 · 테스트 |
-| 복습 시스템 (§14) | ✅ 완료 (2026-09-10). 훅 3종 · `labkit/review.py` · `review` 스킬 · 자가시험 22/22. ⚠ **카드 0장** — Stage 1 을 닫는 순간부터 실제로 돈다 |
+| 복습 시스템 (§14) | ✅ 완료 (2026-09-10). 훅 3종 · `labkit/review.py` · `review` 스킬. ⚠ **카드 0장** — Stage 1 을 닫는 순간부터 실제로 돈다 |
+| 동기화 게이트 (§15) | ✅ 완료 (2026-09-10). 훅 2종. **PC 두 대를 번갈아 쓰는 것이 확정 전제다** |
+| 자가시험 | ✅ **30/30 통과** (guard_handson 5 · guard_spoiler 3 · guard_claim 2 · guard_review 12 · guard_sync 8) |
 | 학습 진행 | ⏸ **미착수.** 사용자 지시로 새 세션에서 시작 |
 | §0-2 가정 확인 | ✅ **완료 (2026-09-10).** A1 한빛텔레콤 · A2 1~5 빈칸→6~11 백지 · A3 Stage 8 이후 판단 |
 | `docs/stages/*.md` | ⛔ **뼈대만.** 각 단계 강의는 그 단계에 도달했을 때 쓴다 |
@@ -592,3 +596,62 @@ SessionStart 에서 `commit_watch.ps1` 이 `git log` 로 마지막 학습 커밋
 | ⭐ 게이트 | `.claude/hooks/guard_review.ps1` | PreToolUse. **복습 없이 새 단계 못 연다** |
 | 절차 | `.claude/skills/review/SKILL.md` | 인출 방식으로 카드를 돌리는 법 |
 | 카드 생성 | `.claude/skills/checkpoint/SKILL.md` 7절 | ⚠⚠ **여기서 안 만들면 그 단계는 영영 복습되지 않는다** |
+
+---
+
+## 15. ⚠⚠ PC 두 대를 번갈아 쓴다 (사용자 확정: 2026-09-10)
+
+> **사용자 요구사항 원문:** *"2개 pc를 번갈아가며 학습을 진행할거 같아"*
+
+⚠⚠ **이건 배포 편의 문제가 아니라 데이터 무결성 문제다.**
+보통의 저장소는 코드만 커밋하지만, **이 저장소는 학습 상태 자체를 커밋한다.**
+
+### 15-1. 무엇이 양쪽에서 동시에 바뀌는가
+
+| 파일 | 무엇이 담기나 | 충돌하면 |
+|---|---|---|
+| `.claude/state/progress.json` | 진도·완료 단계 | 더 진행된 쪽. `completed_stages` 는 **합집합** |
+| `.claude/state/review.json` | ⚠⚠ 카드의 `due`·`interval_days`·`history` | **합칠 수 없다.** 더 최근에 복습한 쪽을 택하고, 애매하면 그 카드만 **만기로 되돌린다** — 틀리게 합치느니 한 번 더 인출하는 편이 싸다 |
+| `outputs/metrics/review_log.json` | 인출 기록 | `entries` 는 **양쪽을 다 남긴다.** 인출 기록을 지우면 §14-3 의 근거가 사라진다 |
+| `outputs/metrics/stageNN.json` | 측정값 | ⚠ 임의로 합치지 말고 **다시 측정한다** (§4 — 파생값을 측정값으로 두지 않는다) |
+| `docs/PROGRESS.md` | 막힌 지점·폐기한 접근 | 양쪽을 다 남긴다. **§13-3 의 재료다** |
+
+### 15-2. 규칙은 두 줄이다
+
+```bash
+git pull --rebase        # 시작 전 — 항상
+git push                 # 끝 — 떠나기 전에 반드시
+```
+
+⚠ 두 번째가 더 자주 깨진다. **PC A 에서 푸시를 잊고 PC B 를 켜는 것**이 가장 흔한 사고다.
+
+### 15-3. ⭐ 게이트 — 여기서도 경고가 아니라 차단이다
+
+`sync_check.ps1` 이 SessionStart 에 `git fetch` 로 상태를 재고,
+`guard_sync.ps1` (PreToolUse) 이 그 판정으로 막는다. 막는 범위는 §14-4 와 **같다** —
+`next-step` · `docs/stages/` · `tests/test_stage*` · `src/raglab` 새 파일 · `progress.json`.
+
+| 상태 | 뜻 | 게이트 |
+|---|---|---|
+| `clean` | 원격과 같다 | 통과 |
+| `ahead` | 푸시만 안 됐다 | ⚠ **경고만.** 떠나기 전에 할 일이지 지금 막을 일이 아니다 — 여기서 막으면 작업 자체가 안 된다 |
+| `behind` | 다른 PC 작업이 안 받아져 있다 | ⛔ **차단** |
+| `diverged` | 이력이 갈라졌다 | ⛔ **차단** |
+| 판정 없음 | 오프라인이거나 훅이 못 돌았다 | 통과 (fail-open) |
+
+⚠⚠ **막지 않는 것** — 복습(`review`)·힌트·`docs/PROGRESS.md`·상태 파일.
+§14 에서 밟은 데드락과 같은 이유다. 게이트가 자기를 여는 길을 막으면 안 된다.
+
+⚠ `behind` 를 차단하는 이유는 되돌리는 비용 때문이다. `pull` 한 번이 5초고,
+갈라진 `review.json` 을 손으로 합치는 것은 「어느 쪽이 맞는가」를 사람이 판단해야 하는 일이다.
+
+### 15-4. 커밋으로 따라오지 **않는** 것 넷
+
+새 PC 에서는 클론만으로 안 돈다. 절차는 `docs/SETUP.md`, 여기엔 목록만.
+
+1. **`.venv/`** — `uv` 로 다시 만든다. ⚠ `uv` 경로는 PC 마다 다르다
+2. **⚠⚠ `%USERPROFILE%\.claude\projects\<경로 인코딩>\memory\`** — Claude 가 실제로 읽는 메모리다.
+   저장소의 `.claude/memory/` 는 **이동용 사본**일 뿐이라 손으로 복사해야 한다.
+   ⚠ 폴더 이름은 **저장소를 어느 경로에 뒀는지에 따라 달라진다**(`D--...` / `C--...`). 외우지 말고 찾는다
+3. **`data/external/`** — KorQuAD. ⚠⚠ CC BY-ND 라 재배포 금지다(§6 지뢰 7). Stage 10 에서 각자 받는다
+4. **`*_session.json`** — 복습·동기화 판정. 세션마다 다시 계산되므로 따라올 필요가 없다

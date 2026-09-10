@@ -10,3 +10,4 @@
 - [존댓말로 답한다](honorific-tone.md) — 사용자 응답과 산출물 본문은 존댓말
 - [복습 게이트](review-gate-system.md) — 복습 안 하면 새 단계를 못 연다. 훅으로 강제한다
 - [최적 복습 주기는 없다](no-optimal-review-interval.md) — 망각 곡선을 근거로 일수를 못박지 마라
+- [PC 두 대 동기화 게이트](two-pc-sync-gate.md) — 학습 상태가 커밋된다. 어긋나면 새 단계가 막힌다

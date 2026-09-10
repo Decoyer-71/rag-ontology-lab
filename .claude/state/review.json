@@ -1,0 +1,18 @@
+{
+  "_comment": "복습 카드 상태. 손으로 고치지 말고 `python -m labkit.review` 로 갱신한다. 훅 review_due.ps1 · guard_review.ps1 이 이 파일을 읽는다.",
+  "schema_version": 1,
+  "params": {
+    "grow": 2.0,
+    "floor_days": 1,
+    "first_interval_days": 1,
+    "max_interval_days": 60,
+    "max_cards_per_session": 5,
+    "long_gap_days": 30
+  },
+  "_params_note": "⚠⚠ grow·floor_days 등은 근거 없는 임의 파라미터다. 「망각 곡선이 정한 최적값」이 아니다 — 그런 것은 없다(labkit/review.py 독스트링). outputs/metrics/review_log.json 이 쌓이면 그 데이터로 조정한다.",
+  "cards": [],
+  "skip_until": null,
+  "skip_log": [],
+  "last_learning_commit": "87d31013785899adca33b37ac183cf5190187cdb",
+  "last_learning_at": "2026-09-10T20:13:25+09:00"
+}

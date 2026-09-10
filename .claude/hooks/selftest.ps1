@@ -187,6 +187,123 @@ try {
 }
 
 # ═══════════════════════════════════════════════════════════════════════════
+#  guard_review — 밀린 복습이 있으면 새 단계를 막는가 (§14)
+# ═══════════════════════════════════════════════════════════════════════════
+
+# ⚠⚠ 카드가 0장이면 게이트는 늘 열려 있다. 그 상태로는 이 훅이 한 번도 안 돌고,
+#    그러면 「방어선이 있다」고 믿는 채로 방어선이 없다.
+#    그래서 **가짜 세션 파일을 주입해** blocked 상태를 만들어 시험한다.
+
+$sessPath = Join-Path $root '.claude\state\review_session.json'
+$sessBak  = $null
+if (Test-Path -LiteralPath $sessPath) {
+    $sessBak = Get-Content -LiteralPath $sessPath -Raw -Encoding UTF8
+}
+
+function Set-Gate([string]$Gate) {
+    $obj = [ordered]@{
+        computed_at   = (Get-Date).ToString('s')
+        gap_days      = 3
+        due_total     = 2
+        cards         = @('s99-probe_a', 's99-probe_b')
+        deferred      = 0
+        revisit_stage = $null
+        skipping      = $false
+        skip_until    = $null
+        gate          = $Gate
+        reviewed      = @()
+    }
+    $json = $obj | ConvertTo-Json -Depth 6
+    [System.IO.File]::WriteAllText($sessPath, $json, (New-Object System.Text.UTF8Encoding($false)))
+}
+
+try {
+    Set-Gate 'blocked'
+
+    # ① 새 단계를 여는 정문 → 차단
+    Check "review: 밀린 복습 중 next-step" (Invoke-Hook 'guard_review.ps1' @{
+        tool_name  = 'Skill'
+        tool_input = @{ skill = 'next-step' }
+    }) 2
+
+    # ② 새 단계 강의 집필 → 차단
+    Check "review: 밀린 복습 중 새 단계 강의" (Invoke-Hook 'guard_review.ps1' @{
+        tool_name  = 'Write'
+        tool_input = @{ file_path = "$root\docs\stages\07-graph.md"; content = 'x' }
+    }) 2
+
+    # ③ 새 단계 테스트 작성 → 차단
+    Check "review: 밀린 복습 중 새 단계 테스트" (Invoke-Hook 'guard_review.ps1' @{
+        tool_name  = 'Write'
+        tool_input = @{ file_path = "$root\tests\test_stage07_graph.py"; content = 'x' }
+    }) 2
+
+    # ④ 진도 전진 → 차단
+    Check "review: 밀린 복습 중 진도 전진" (Invoke-Hook 'guard_review.ps1' @{
+        tool_name  = 'Edit'
+        tool_input = @{ file_path = "$root\.claude\state\progress.json"; old_string = 'a'; new_string = 'b' }
+    }) 2
+
+    # ⑤ ⚠⚠ 데드락 방지 — 복습 자체로 가는 길은 열려 있어야 한다
+    Check "review: 복습 스킬은 통과" (Invoke-Hook 'guard_review.ps1' @{
+        tool_name  = 'Skill'
+        tool_input = @{ skill = 'review' }
+    }) 0
+
+    Check "review: 복습 상태 파일은 통과" (Invoke-Hook 'guard_review.ps1' @{
+        tool_name  = 'Write'
+        tool_input = @{ file_path = "$root\.claude\state\review.json"; content = 'x' }
+    }) 0
+
+    Check "review: PROGRESS.md 기록은 통과" (Invoke-Hook 'guard_review.ps1' @{
+        tool_name  = 'Write'
+        tool_input = @{ file_path = "$root\docs\PROGRESS.md"; content = 'x' }
+    }) 0
+
+    Check "review: 무관한 파일은 통과" (Invoke-Hook 'guard_review.ps1' @{
+        tool_name  = 'Write'
+        tool_input = @{ file_path = "$root\README.md"; content = 'x' }
+    }) 0
+
+    # ⑤-2 ⚠⚠ 데드락 방지 — 복습의 코드 카드는 src/raglab/ 의 **기존 파일**을 되돌린다.
+    #      그걸 막으면 게이트가 자기를 여는 유일한 길을 막는 것이 된다.
+    Check "review: raglab 기존 파일은 통과 (코드 카드)" (Invoke-Hook 'guard_review.ps1' @{
+        tool_name  = 'Edit'
+        tool_input = @{
+            file_path  = "$root\src\raglab\chunking.py"
+            old_string = 'a'
+            new_string = 'b'
+        }
+    }) 0
+
+    # ⑤-3 단, 아직 없는 파일을 만드는 것은 새 단계 작업대다 → 차단
+    Check "review: raglab 새 파일은 차단 (새 단계)" (Invoke-Hook 'guard_review.ps1' @{
+        tool_name  = 'Write'
+        tool_input = @{ file_path = "$root\src\raglab\graph.py"; content = 'x' }
+    }) 2
+
+    # ⑥ 게이트가 열리면 전부 통과해야 한다 — 오탐으로 영원히 막는 것이 최악이다
+    Set-Gate 'open'
+
+    Check "review: 게이트 열리면 next-step 통과" (Invoke-Hook 'guard_review.ps1' @{
+        tool_name  = 'Skill'
+        tool_input = @{ skill = 'next-step' }
+    }) 0
+
+    Check "review: 게이트 열리면 강의 집필 통과" (Invoke-Hook 'guard_review.ps1' @{
+        tool_name  = 'Write'
+        tool_input = @{ file_path = "$root\docs\stages\07-graph.md"; content = 'x' }
+    }) 0
+}
+finally {
+    if ($null -ne $sessBak) {
+        [System.IO.File]::WriteAllText($sessPath, $sessBak, (New-Object System.Text.UTF8Encoding($false)))
+    } else {
+        Remove-Item -LiteralPath $sessPath -Force -ErrorAction SilentlyContinue
+    }
+}
+
+# ═══════════════════════════════════════════════════════════════════════════
 
 $total = $pass + $fail
 Write-Output "[selftest] $pass/$total 통과"

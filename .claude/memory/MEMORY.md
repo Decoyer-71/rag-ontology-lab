@@ -1,10 +1,12 @@
 - [rag-ontology-lab 프로젝트](rag-ontology-lab-project.md) — RAG·온톨로지 학습 실습실 겸 취업 포트폴리오. 학습자는 트랜스포머만 안다
-- [git 신원은 저장소마다 지정](git-identity-yoon71.md) — 전역 설정이 없다. 실제 값은 로컬 메모리에만
+- [git 전역 신원은 설정돼 있다](git-identity-yoon71.md) — 저장소마다 지정할 필요 없다 (2026-09-10 재실측)
 - [사용자가 코드를 쓴다](learner-writes-code.md) — src/raglab 본체는 Claude 가 짜지 않는다
 - [답이 아니라 힌트](hint-not-answer.md) — 4단계로 수위를 올린다. 정답 코드는 끝까지 안 준다
 - [개선은 기준선과 나란히](measure-with-baseline.md) — 좋아진 지표 하나만 보고하는 병
 - [성능이 좋으면 오염부터 의심](suspect-goldenset-contamination.md) — Recall 0.95 이상은 축하가 아니라 경보
 - [합성 데이터는 모든 곳에 표기](label-synthetic-data.md) — 합성 수치가 실세계 성능처럼 읽히는 것을 막는다
 - [파이썬은 .venv 전체 경로로](venv-full-path.md) — 시스템 python 은 MS Store 스텁이다
-- [윈도우 한글 인코딩 지뢰 셋](windows-encoding-traps.md) — ps1 BOM · 파이썬 stdout · Bash heredoc
+- [윈도우 인코딩·이스케이프 지뢰 다섯](windows-encoding-traps.md) — ps1 BOM · 파이썬 stdout · heredoc · sed 백슬래시 · 환경변수 접두사
 - [존댓말로 답한다](honorific-tone.md) — 사용자 응답과 산출물 본문은 존댓말
+- [복습 게이트](review-gate-system.md) — 복습 안 하면 새 단계를 못 연다. 훅으로 강제한다
+- [최적 복습 주기는 없다](no-optimal-review-interval.md) — 망각 곡선을 근거로 일수를 못박지 마라

@@ -61,6 +61,12 @@ $RECYCLE.BIN/
 secrets.json
 .claude/settings.local.json
 
+# ── 복습 세션 계획 (CLAUDE.md §14) ──────────────────
+# review_session.json 은 SessionStart 마다 다시 계산된다. PC 마다 달라야 한다.
+# ⚠ review.json(카드·간격·건너뛴 기록)과 review_log.json(인출 결과)은 **커밋한다** —
+#   그게 쌓인 것이 §13-2 의 근거가 된다.
+.claude/state/review_session.json
+
 # ── 스크래치 ─────────────────────────────────────────────
 scratch/
 tmp/

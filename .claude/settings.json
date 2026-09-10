@@ -34,6 +34,17 @@
         ]
       },
       {
+        "matcher": "Write|Edit|NotebookEdit|Skill",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard_review.ps1\"",
+            "timeout": 30,
+            "statusMessage": "§14 가드: 밀린 복습이 있으면 새 단계 차단"
+          }
+        ]
+      },
+      {
         "matcher": "Read|Grep|Glob|Bash|PowerShell",
         "hooks": [
           {
@@ -69,6 +80,18 @@
             "type": "command",
             "command": "powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File \"$CLAUDE_PROJECT_DIR/.claude/hooks/session_banner.ps1\"",
             "timeout": 30
+          },
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File \"$CLAUDE_PROJECT_DIR/.claude/hooks/commit_watch.ps1\"",
+            "timeout": 60,
+            "statusMessage": "§14: 학습 커밋 따라잡기"
+          },
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File \"$CLAUDE_PROJECT_DIR/.claude/hooks/review_due.ps1\"",
+            "timeout": 60,
+            "statusMessage": "§14: 공백기간 반영 복습 계획"
           },
           {
             "type": "command",

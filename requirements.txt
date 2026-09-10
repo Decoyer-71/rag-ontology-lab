@@ -1,0 +1,29 @@
+# rag-ontology-lab — 의존성
+#
+# ⚠ 이 파일은 CLAUDE.md §2 「환경 실측값」과 일치해야 한다.
+#   실제로 설치하지 않은 패키지를 여기 적지 마라 (§13-5 부풀리지 않는다).
+#
+# 설치:
+#   uv pip install --python .venv/Scripts/python.exe -r requirements.txt
+#
+# ⚠ uv 는 PATH 에 없다. 전체 경로로 부른다 (§6 지뢰 2):
+#   C:\Users\cvcv6\AppData\Local\Microsoft\WinGet\Packages\astral-sh.uv_Microsoft.Winget.Source_8wekyb3d8bbwe\uv.exe
+
+# ── 본편 (Stage 0~8, 11) ─────────────────────────────────
+# 벡터 연산. TF-IDF·코사인·BM25·RRF 를 전부 이걸로 직접 짠다
+numpy==2.5.3
+# 개념사전(concepts.yaml)·골든셋·역량질문 파싱
+PyYAML==6.0.3
+# 단계별 통과 조건
+pytest==9.1.1
+
+# ── Stage 9 (신경망 임베딩) — ⛔ 아직 설치 안 함 ────────────
+# 약 2~3GB 다. C 여유 19GB. 조달 전 사용자 확인 (CLAUDE.md §9)
+# 그 시점에 아래 주석을 풀고 실제 버전을 적는다.
+#
+# torch
+# sentence-transformers
+
+# ── 설치하지 않는 것 ─────────────────────────────────────
+# langchain · llama-index · faiss · chromadb 를 의도적으로 쓰지 않는다.
+# 프레임워크가 감추는 부분이 이 프로젝트의 학습 대상이다 (README 「기술 스택」).

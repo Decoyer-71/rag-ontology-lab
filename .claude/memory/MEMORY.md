@@ -1,3 +1,5 @@
+- [rag-ontology-lab 프로젝트](rag-ontology-lab-project.md) — RAG·온톨로지 학습 실습실 겸 취업 포트폴리오. 학습자는 트랜스포머만 안다
+- [git 신원은 YOON71](git-identity-yoon71.md) — 전역 설정이 없어 저장소마다 지정해야 한다. gh CLI 없음
 - [사용자가 코드를 쓴다](learner-writes-code.md) — src/raglab 본체는 Claude 가 짜지 않는다
 - [답이 아니라 힌트](hint-not-answer.md) — 4단계로 수위를 올린다. 정답 코드는 끝까지 안 준다
 - [개선은 기준선과 나란히](measure-with-baseline.md) — 좋아진 지표 하나만 보고하는 병

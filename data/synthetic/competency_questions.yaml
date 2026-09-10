@@ -1,0 +1,80 @@
+# 한빛텔레콤 역량질문 (competency_questions.yaml)
+#
+# ⚠⚠ 합성 데이터입니다. (CLAUDE.md §3-S)
+#
+# 교본 온톨로지 STEP 1 — **온톨로지를 그리기 전에 답해야 할 질문을 먼저 적는다.**
+# 이것이 범위 설정과 완료 기준 역할을 동시에 한다.
+# ⚠ CQ에 나오지 않는 개념은 만들지 않는다 — 과설계를 막는 유일한 장치.
+
+questions:
+  - id: CQ-01
+    q: "내가 지금 쓰는 요금제보다 싼 요금제가 있나?"
+    hops: 3
+    path: "고객 -[가입]-> 요금제 / 고객 -[보유]-> 단말기 <-[호환]- 후보요금제 / 월요금 비교"
+    needs: [triples, plan_attrs]
+
+  - id: CQ-02
+    q: "이 단말기에서 쓸 수 있는 요금제는 무엇인가?"
+    hops: 1
+    path: "단말기 <-[호환]- 요금제"
+    needs: [triples]
+
+  - id: CQ-03
+    q: "3망 해지하면 위약금(W코드)은 어떻게 되나?"
+    hops: 2
+    path: "개념:3망해지 -> CONCEPT:BULK_TERMINATION -[발생]-> 위약금:W09"
+    needs: [concepts, triples]
+
+  - id: CQ-04
+    q: "가족결합 3회선이면 얼마나 아끼나?"
+    hops: 1
+    path: "결합 -[할인액]-> 값 × 회선 수"
+    needs: [triples]
+
+  - id: CQ-05
+    q: "이 고객에게 5G 요금제를 추천해도 되나?"
+    hops: 2
+    path: "고객 -[보유]-> 단말기 -[지원망]-> 통신망 ⊇ 요금제 -[사용가능망]-> 통신망"
+    needs: [triples, rules]
+
+  - id: CQ-06
+    q: "일괄해지는 누구 승인이 필요한가?"
+    hops: 1
+    path: "절차:일괄해지 -[필요승인]-> 역할"
+    needs: [triples]
+
+  - id: CQ-07
+    q: "5G스탠다드에서 가입할 수 있는 부가서비스는?"
+    hops: 1
+    path: "요금제 -[가입가능]-> 부가서비스"
+    needs: [triples]
+
+  - id: CQ-08
+    q: "이 고객이 지금 요금제에서 한 단계 올리면 무엇인가?"
+    hops: 2
+    path: "고객 -[가입]-> 요금제 -[상위대체]-> 요금제"
+    needs: [triples]
+
+  - id: CQ-09
+    q: "「선약」이 무슨 뜻인가?"
+    hops: 0
+    path: "개념사전 표면형 매칭"
+    needs: [concepts]
+
+  - id: CQ-10
+    q: "해지 진행 중인 고객에게 부가서비스를 권해도 되나?"
+    hops: 0
+    path: "RULE:NO_ADDON_ON_TERMINATION"
+    needs: [rules]
+
+  - id: CQ-11
+    q: "W09는 어떤 절차에서 발생하나?"
+    hops: 1
+    path: "위약금:W09 <-[발생]- 절차"
+    needs: [triples]
+
+  - id: CQ-12
+    q: "김민수 고객이 결합 할인을 얼마나 받고 있나?"
+    hops: 2
+    path: "고객 -[결합가입]-> 결합 -[할인액]-> 값"
+    needs: [triples]

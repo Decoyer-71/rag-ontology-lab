@@ -1,0 +1,173 @@
+# 한빛텔레콤 개념사전 (concepts.yaml)
+#
+# ⚠⚠ 합성 데이터입니다. (CLAUDE.md §3-S)
+#
+# 교본 부록 02 「개념 사전」 형식을 따릅니다.
+# 이 파일 한 장이면 그래프 DB 없이도 ①질의 정규화 ②검색 확장 ③툴 라우팅 ④권한 필터가 동작합니다.
+#
+# ⚠ Stage 6 에서 이 파일의 효과를 **측정**합니다 — 넣기 전/후 Recall 을 나란히 놓습니다.
+
+concepts:
+  - id: CONCEPT:TERMINATION
+    label: 해지
+    definition: 이용계약을 종료하는 절차
+    synonyms: [해약, 계약해지, 취소, 끊기, 탈퇴, cancel]
+    internal: ["번호이동 해지"]
+    narrower: [CONCEPT:BULK_TERMINATION, CONCEPT:FORCED_TERMINATION]
+    ambiguous_with: [CONCEPT:SUSPENSION]   # 「정지」와 헷갈린다 → 되묻기
+    owner: 고객지원팀
+    acl: [CS_AGENT, CUSTOMER]
+    updated: 2026-03-14
+
+  - id: CONCEPT:BULK_TERMINATION
+    label: 일괄해지
+    definition: 동일 명의 3회선 이상을 같은 날 해지하는 절차. 팀장 승인이 필요하다
+    synonyms: ["3망 해지", "전회선 해지", "통합해지", "한번에 해지"]
+    internal: ["3망 해지"]                  # ⚠ 사내에서만 쓰는 표현. 문서에 정의가 없다
+    broader: CONCEPT:TERMINATION
+    related: [CONCEPT:PENALTY_CODE]
+    owner: 고객지원팀
+    acl: [CS_AGENT]
+    updated: 2026-03-14
+
+  - id: CONCEPT:SUSPENSION
+    label: 정지
+    definition: 회선을 일시적으로 사용 불가로 만드는 것. 해지와 다르다
+    synonyms: [일시정지, 일시 정지, 서비스 정지]
+    ambiguous_with: [CONCEPT:TERMINATION]
+    owner: 고객지원팀
+    acl: [CS_AGENT, CUSTOMER]
+    updated: 2026-03-14
+
+  - id: CONCEPT:FORCED_TERMINATION
+    label: 직권 해지
+    definition: 회사가 이용자의 신청 없이 계약을 종료하는 것. 90일 이상 미납 시
+    synonyms: [강제해지, 직권해지]
+    broader: CONCEPT:TERMINATION
+    owner: 요금정책팀
+    acl: [CS_AGENT]
+    updated: 2026-03-14
+
+  - id: CONCEPT:PENALTY_CODE
+    label: 할인반환금
+    definition: 약정 기간 만료 전 해지·하향 시 반환하는 할인액
+    synonyms: [위약금, 반환금, 페널티, 물어내는 돈]
+    internal: ["W코드", "더블유코드"]        # ⚠ 사내 코드. 문서에 정의가 없다
+    narrower: [CONCEPT:W01, CONCEPT:W02, CONCEPT:W03, CONCEPT:W09]
+    owner: 요금정책팀
+    route_to: billing_api
+    acl: [CS_AGENT]
+    updated: 2026-03-14
+
+  - id: CONCEPT:W01
+    label: W01
+    definition: 선택약정 해지 반환금
+    broader: CONCEPT:PENALTY_CODE
+    owner: 요금정책팀
+    acl: [CS_AGENT]
+
+  - id: CONCEPT:W02
+    label: W02
+    definition: 공시지원금 해지 반환금
+    broader: CONCEPT:PENALTY_CODE
+    owner: 요금정책팀
+    acl: [CS_AGENT]
+
+  - id: CONCEPT:W03
+    label: W03
+    definition: 요금제 하향 변경 반환금
+    broader: CONCEPT:PENALTY_CODE
+    owner: 요금정책팀
+    acl: [CS_AGENT]
+
+  - id: CONCEPT:W09
+    label: W09
+    definition: 일괄해지에 따른 합산 반환금
+    broader: CONCEPT:PENALTY_CODE
+    related: [CONCEPT:BULK_TERMINATION]
+    owner: 요금정책팀
+    acl: [CS_AGENT]
+
+  - id: CONCEPT:REFUND
+    label: 환불
+    definition: 과오납금 또는 청약철회에 따른 금액 반환
+    synonyms: [반환, 돌려받기, 되돌려줌]
+    related: [CONCEPT:WITHDRAWAL]          # ⚠ 「청약철회」와 다른 말인데 고객은 섞어 쓴다
+    owner: 요금정책팀
+    acl: [CS_AGENT, CUSTOMER]
+    updated: 2026-03-14
+
+  - id: CONCEPT:WITHDRAWAL
+    label: 청약철회
+    definition: 계약 체결일로부터 14일 이내(개통 시 7일) 청약을 철회하는 것
+    synonyms: [계약철회, 개통취소, 무르기]
+    related: [CONCEPT:REFUND, CONCEPT:TERMINATION]
+    ambiguous_with: [CONCEPT:TERMINATION]
+    owner: 법무팀
+    acl: [CS_AGENT, CUSTOMER]
+    updated: 2026-03-14
+
+  - id: CONCEPT:SELECTED_DISCOUNT
+    label: 선택약정
+    definition: 공시지원금 대신 요금의 25%를 할인받는 약정
+    synonyms: ["요금할인", "25% 할인", "선택 약정"]
+    internal: ["선약"]
+    related: [CONCEPT:PENALTY_CODE]
+    owner: 상품기획팀
+    acl: [CS_AGENT, CUSTOMER]
+    updated: 2026-03-14
+
+  - id: CONCEPT:BUNDLE_LINE
+    label: 결합 회선
+    definition: 가족결합 또는 인터넷결합으로 묶인 회선
+    synonyms: [결합회선, 묶음 회선, 가족결합]
+    internal: ["결합 물린 회선"]
+    owner: 상품기획팀
+    acl: [CS_AGENT, CUSTOMER]
+    updated: 2026-03-14
+
+  - id: CONCEPT:PLAN
+    label: 요금제
+    definition: 월 요금과 제공량이 정해진 상품
+    synonyms: [요금, 플랜, 상품]
+    narrower: [CONCEPT:PLAN_5G, CONCEPT:PLAN_LTE]
+    owner: 상품기획팀
+    acl: [CS_AGENT, CUSTOMER]
+
+  - id: CONCEPT:PLAN_5G
+    label: 5G 요금제
+    broader: CONCEPT:PLAN
+    definition: 5G 통신망을 사용하는 요금제. 5G 지원 단말기에서만 가입 가능
+    synonyms: [5지, 5G플랜]
+    owner: 상품기획팀
+    acl: [CS_AGENT, CUSTOMER]
+
+  - id: CONCEPT:PLAN_LTE
+    label: LTE 요금제
+    broader: CONCEPT:PLAN
+    definition: LTE 통신망을 사용하는 요금제
+    synonyms: [4G 요금제, 엘티이]
+    owner: 상품기획팀
+    acl: [CS_AGENT, CUSTOMER]
+
+# ⚠⚠ 규칙 — Stage 8 에서 「생성 후 검사」에 쓴다 (교본 온톨로지 붙는자리 ③)
+rules:
+  - id: RULE:NO_ADDON_ON_TERMINATION
+    description: 해지 의사를 밝힌 고객에게 부가서비스를 추천하지 않는다
+    source: MAN-TERM §5
+    check: 답변에 부가서비스 권유가 있고 고객 상태가 해지 진행 중이면 위반
+
+  - id: RULE:NO_5G_PLAN_ON_NON5G_DEVICE
+    description: 5G 미지원 단말기에 5G 요금제를 추천하지 않는다
+    source: DEV-COMPAT
+    check: 추천 요금제의 망이 5G인데 고객 단말기 지원망에 5G가 없으면 위반
+
+  - id: RULE:LATEST_EFFECTIVE_WINS
+    description: 문서 간 내용이 충돌하면 유효일자가 최신인 것을 따르고 충돌 사실을 알린다
+    source: 교본 STEP 6 생성 프롬프트
+    check: 인용된 청크의 doc_id 에 구버전(superseded_by 보유)이 섞였으면 위반
+
+  - id: RULE:NO_ETA_ON_OUTAGE
+    description: 복구 시각이 미정인 장애에 추정 시각을 말하지 않는다
+    source: OUTAGE §3
+    check: 답변에 복구 예상 시각이 있는데 근거 청크에 확정 시각이 없으면 위반

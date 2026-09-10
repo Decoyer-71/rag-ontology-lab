@@ -26,7 +26,7 @@ git clone https://github.com/Decoyer-71/rag-ontology-lab.git
 cd rag-ontology-lab
 ```
 
-⚠ 경로에 **공백을 넣지 마십시오.** `C:\projects\rag-ontology-lab` 처럼 짧고 공백 없는 곳에 둡니다.
+⚠ 경로에 **공백을 넣지 마십시오.** `D:\projects\rag-ontology-lab` 처럼 짧고 공백 없는 곳에 둡니다.
 
 ---
 
@@ -115,7 +115,7 @@ Stage 9 이전에는 필요 없습니다.
 ```
 
 ⚠ **폴더 이름은 세션을 어느 디렉터리에서 열었는지에 따라 달라집니다.**
-`C:\` 에서 열면 `C--`, `C:\projects\rag-ontology-lab` 에서 열면 그 경로를 인코딩한 이름이 됩니다.
+`C:\` 에서 열면 `C--`, `D:\projects\rag-ontology-lab` 에서 열면 그 경로를 인코딩한 이름이 됩니다.
 그래서 **경로를 외우지 말고 찾으십시오.**
 
 ```powershell
@@ -137,7 +137,7 @@ Copy-Item -Recurse -Force .claude\memory\* $dest
 
 ### ⚠⚠ 5-1. git 신원도 PC 마다 지정해야 합니다
 
-이 프로젝트를 만든 PC 에는 git **전역 신원 설정이 없었습니다.** 없으면
+이 프로젝트를 만든 PC 에는 이제 git 전역 신원이 있습니다 (2026-09-10 재실측). ⚠ **새 PC 에는 없을 수 있습니다.** 없으면
 `fatal: unable to auto-detect email address` 로 **커밋이 아예 실패합니다.**
 
 ```powershell

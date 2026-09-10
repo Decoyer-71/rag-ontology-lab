@@ -46,7 +46,7 @@
 |---|---|---|---|
 | A1 | **코퍼스 도메인** | **한빛텔레콤 가상사례** (교본이 처음부터 끝까지 쓴 그 사례) | `data/synthetic/` 전체와 골든셋·개념사전·트리플이 전부 교체된다. 후보였던 대안: 석유·에너지 도메인(oil_DA 업무 전이용) |
 | A2 | **실습 강도** | **Stage 1~5 는 빈칸 채우기**(시그니처·독스트링·테스트 제공) **→ Stage 6~11 은 백지**(명세와 테스트만) | `src/raglab/*.py` 의 뼈대 분량이 달라진다 |
-| A3 | **Stage 9 신경망 임베딩 조달 시점** | Stage 8까지 numpy로 끝낸 뒤 판단 | 지금 하면 **약 2~3GB 조달**이 선행한다(§9). C 여유 19GB |
+| A3 | **Stage 9 신경망 임베딩 조달 시점** | Stage 8까지 numpy로 끝낸 뒤 판단 | 지금 하면 **약 2~3GB 조달**이 선행한다(§9). D 여유 324GB — 용량은 더는 제약이 아니다 |
 
 ⚠ **확인 전까지 이 가정들을 「사용자가 정한 것」처럼 말하지 마라.** 첫 턴에 세 줄로 묻고 답을 받은 뒤 이 표를 **결정으로 교체**한다(§5-K').
 
@@ -57,10 +57,10 @@
 ## 1. 디렉터리 구조
 
 ```
-C:\projects\rag-ontology-lab\
+D:\projects\rag-ontology-lab\
 ├── CLAUDE.md                      ← 이 파일 (학습 규율)
 ├── README.md                      ← ⭐ GitHub 정면. 사용자가 아니라 채용 담당자용 (§13)
-├── .venv\                         ← ⚠ 커밋 안 함. Python 3.12.14 (§2)
+├── .venv\                         ← ⚠ 커밋 안 함. Python 3.12.13 (§2)
 ├── .claude\
 │   ├── settings.json              ← 훅 등록 + 권한 규칙
 │   ├── agents\                    ← 위임용 sub-agent 4종
@@ -104,15 +104,15 @@ C:\projects\rag-ontology-lab\
 
 | 항목 | 상태 |
 |---|---|
-| **작업용 파이썬** | ✅ **`.venv\Scripts\python.exe` — Python 3.12.14** (`uv` 가 받은 관리형 CPython). 모든 코드는 **이 인터프리터로** 돌린다 |
+| **작업용 파이썬** | ✅ **`.venv\Scripts\python.exe` — Python 3.12.13** (`uv` 가 받은 관리형 CPython). 모든 코드는 **이 인터프리터로** 돌린다 |
 | 시스템 파이썬 | ⛔ **없다.** `python` 은 **Microsoft Store 스텁**이라 부르면 죽는다 |
-| **패키지 조달** | `uv` **0.12.9**. ⚠⚠ **PATH 에 안 잡힌다** — 전체 경로로 부른다:<br>`%LOCALAPPDATA%\Microsoft\WinGet\Packages\astral-sh.uv_Microsoft.Winget.Source_8wekyb3d8bbwe\uv.exe`<br>추가는 `uv pip install --python C:\projects\rag-ontology-lab\.venv\Scripts\python.exe <패키지>` |
+| **패키지 조달** | `uv` **0.12.12**. ⚠⚠ **PATH 에 안 잡힌다** — 전체 경로로 부른다:<br>`%LOCALAPPDATA%\Microsoft\WinGet\Packages\astral-sh.uv_Microsoft.Winget.Source_8wekyb3d8bbwe\uv.exe`<br>추가는 `uv pip install --python D:\projects\rag-ontology-lab\.venv\Scripts\python.exe <패키지>` |
 | **venv 패키지** | ✅ 실제 설치분 전부: **numpy 2.5.3** · **pyyaml 6.0.3** · **pytest 9.1.1** (+ colorama · iniconfig · packaging · pluggy · pygments) |
 | ⛔ **없는 패키지** | **torch · sentence-transformers · transformers · scikit-learn · scipy · pandas · matplotlib · faiss · chromadb · langchain 은 설치돼 있지 않다.** **있다고 가정하고 코드를 쓰지 마라.** 필요하면 위 `uv pip install` 로 조달하고 §9 로 비용을 판정한다 |
 | ⚠ **numpy 2.x** | 메이저가 최신이다. **블로그·LLM 기억 속 관용구가 깨진다**(`np.float_` 삭제 등). §4 대로 **실제로 찍어 보고** 쓴다 |
-| git | ✅ 2.55.0.windows.3. 원격 `origin` = https://github.com/Decoyer-71/rag-ontology-lab (**공개**). ⚠ 전역 신원 설정이 **없다** — 저장소마다 `git config --local user.name/email` 지정 |
+| git | ✅ 2.55.0.windows.3. 원격 `origin` = https://github.com/Decoyer-71/rag-ontology-lab (**공개**). ✅ 전역 신원 **있다** (2026-09-10 재실측). ⚠⚠ **실제 값을 이 파일에 적지 마라** — 공개 저장소다. 확인은 `git config --global user.email` 로 한다. ⚠ 옛 판은 「전역 신원 없음 → 저장소마다 local 지정」이었다 — **이제 불필요하다** |
 | **GitHub CLI** | ✅ **`gh` 2.100.0** (2026-09-10 winget 설치). ⚠ **PATH 에 안 잡힐 수 있다** — 전체 경로: `C:\Program Files\GitHub CLI\gh.exe`. ⚠⚠ **인증·계정·토큰 입력은 사용자만 한다** → `repo-publish` 스킬 |
-| 디스크 | C 여유 **19.0GB** (2026-09-10 실측). ⛔ D 드라이브 없음. **2GB 넘는 조달은 §9 판정 대상** |
+| 디스크 | ✅ **작업 루트는 D 다.** D 931GB (여유 **324GB**) · C 여유 **66GB** (2026-09-10 재실측). ⚠ 옛 판은 「C 여유 19GB · D 없음」이었다 — **프로젝트가 D 로 옮겨졌다.** 여유가 넉넉해져 **2~3GB 조달이 더는 병목이 아니다**(§9 재판정) |
 | 인터넷 조사 | WebSearch·WebFetch 사용 가능 → **`dataset-scout` 에 위임**(§5) |
 
 **호출 규약** — PATH 에 등록하지 않았다. 항상 전체 경로로 부른다:
@@ -240,6 +240,9 @@ C:\projects\rag-ontology-lab\
 5. **한글 파일을 읽고 쓸 때 인코딩을 명시한다.** `open(..., encoding="utf-8")`. Windows 기본은 cp949 라 안 적으면 깨진다
 6. **`gh` 는 PATH 에 안 잡힐 수 있다.** 전체 경로 `C:\Program Files\GitHub CLI\gh.exe` 로 부른다 (§2). ⚠⚠ **인증은 사용자만** — Claude 는 자격증명을 입력하지 않는다
 7. **KorQuAD 는 CC BY-ND 2.0 KR — 재배포 금지.** `data/external/` 은 `.gitignore` 에 들어 있다. **풀지 마라** (`data/DATA_CARD.md`)
+8. **⚠⚠ `sed` 로 윈도우 경로(`D:\projects\...`)를 치환하지 마라.** 2026-09-10 에 실제로 깨졌다 — 백슬래시가 `\r`(CR)·`\p` 로 먹혀 `D:projectsag-ontology-lab` 가 나왔다. **백슬래시가 든 치환은 파이썬 스크립트로 한다**(지뢰 3과 같은 뿌리)
+9. **pytest 한글 테스트명이 콘솔에서 깨진다.** 윈도우 콘솔이 cp949 라서다. `PYTHONIOENCODING=utf-8` 을 붙이면 정상이다. ⚠ 파이썬 스크립트 자신의 `print` 도 같은 이유로 죽는다 → `sys.stdout.reconfigure(encoding="utf-8")`
+10. **⚠ `PYTHONIOENCODING=utf-8 .venv/Scripts/python.exe ...` 처럼 환경변수를 앞에 붙이면 `.claude/settings.json` 의 허용 규칙 `Bash(.venv/Scripts/python.exe *)` 에 안 걸려 권한이 거부된다.** 스크립트 안에서 인코딩을 세우고, 명령은 허용 규칙 모양 그대로 부른다
 
 ---
 
@@ -316,7 +319,7 @@ Claude 는 뼈대와 테스트까지. **본체는 사용자다.** 막히면 `hin
 | TF-IDF · BM25 · 코사인 · RRF | numpy(**설치됨**) | **가장 쌈** | 전부 직접 구현 대상 |
 | 그래프 탐색(BFS·다중홉) | 표준 라이브러리 | **가장 쌈** | ⛔ `networkx` 미설치 — 필요 없다 |
 | KorQuAD 다운로드 (Stage 10) | `fetch_korquad.py` | 쌈 (약 40MB) | ⚠⚠ **CC BY-ND — 재배포 금지** |
-| **신경망 임베딩** (Stage 9) | ⛔ **torch·sentence-transformers 미설치** — `uv` 조달 | **⚠ 약 2~3GB. C 여유 19GB** | **조달 전 사용자에게 확인한다** |
+| **신경망 임베딩** (Stage 9) | ⛔ **torch·sentence-transformers 미설치** — `uv` 조달 | **⚠ 약 2~3GB. D 여유 324GB — 용량 제약 아님** | **조달 전 사용자에게 확인한다** |
 | 재순위(Cross-Encoder) | ⛔ 미설치 — 위와 같은 스택 | 위와 같음 | Stage 9 를 한 뒤에만 의미가 있다 |
 | 벡터 DB(faiss·chroma) | ⛔ 미설치 | 중간 | ⚠ **이 프로젝트에 필요 없다.** 교본 §2-4 — *그래프 DB 는 대부분 필요 없다* 와 같은 판단. **넣으면 오히려 §13 감점**(도구 나열은 이해의 증거가 아니다) |
 | LLM 호출 (생성 단계) | API 키 필요 | ⚠ **사용자만 결정 가능** | Stage 8 전에 **모아서 한 번에** 묻는다. ⚠ 없어도 Stage 8 은 성립한다(검색·규칙 검사까지가 본체) |

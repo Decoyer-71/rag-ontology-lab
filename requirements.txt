@@ -7,7 +7,7 @@
 #   uv pip install --python .venv/Scripts/python.exe -r requirements.txt
 #
 # ⚠ uv 는 PATH 에 없다. 전체 경로로 부른다 (§6 지뢰 2):
-#   C:\Users\cvcv6\AppData\Local\Microsoft\WinGet\Packages\astral-sh.uv_Microsoft.Winget.Source_8wekyb3d8bbwe\uv.exe
+#   %LOCALAPPDATA%\Microsoft\WinGet\Packages\astral-sh.uv_Microsoft.Winget.Source_8wekyb3d8bbwe\uv.exe
 
 # ── 본편 (Stage 0~8, 11) ─────────────────────────────────
 # 벡터 연산. TF-IDF·코사인·BM25·RRF 를 전부 이걸로 직접 짠다

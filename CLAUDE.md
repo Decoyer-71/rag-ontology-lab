@@ -106,12 +106,12 @@ C:\projects\rag-ontology-lab\
 |---|---|
 | **작업용 파이썬** | ✅ **`.venv\Scripts\python.exe` — Python 3.12.14** (`uv` 가 받은 관리형 CPython). 모든 코드는 **이 인터프리터로** 돌린다 |
 | 시스템 파이썬 | ⛔ **없다.** `python` 은 **Microsoft Store 스텁**이라 부르면 죽는다 |
-| **패키지 조달** | `uv` **0.12.9**. ⚠⚠ **PATH 에 안 잡힌다** — 전체 경로로 부른다:<br>`C:\Users\cvcv6\AppData\Local\Microsoft\WinGet\Packages\astral-sh.uv_Microsoft.Winget.Source_8wekyb3d8bbwe\uv.exe`<br>추가는 `uv pip install --python C:\projects\rag-ontology-lab\.venv\Scripts\python.exe <패키지>` |
+| **패키지 조달** | `uv` **0.12.9**. ⚠⚠ **PATH 에 안 잡힌다** — 전체 경로로 부른다:<br>`%LOCALAPPDATA%\Microsoft\WinGet\Packages\astral-sh.uv_Microsoft.Winget.Source_8wekyb3d8bbwe\uv.exe`<br>추가는 `uv pip install --python C:\projects\rag-ontology-lab\.venv\Scripts\python.exe <패키지>` |
 | **venv 패키지** | ✅ 실제 설치분 전부: **numpy 2.5.3** · **pyyaml 6.0.3** · **pytest 9.1.1** (+ colorama · iniconfig · packaging · pluggy · pygments) |
 | ⛔ **없는 패키지** | **torch · sentence-transformers · transformers · scikit-learn · scipy · pandas · matplotlib · faiss · chromadb · langchain 은 설치돼 있지 않다.** **있다고 가정하고 코드를 쓰지 마라.** 필요하면 위 `uv pip install` 로 조달하고 §9 로 비용을 판정한다 |
 | ⚠ **numpy 2.x** | 메이저가 최신이다. **블로그·LLM 기억 속 관용구가 깨진다**(`np.float_` 삭제 등). §4 대로 **실제로 찍어 보고** 쓴다 |
 | git | ✅ 2.55.0.windows.3. 이 저장소는 **로컬만** — ⛔ **원격 없음** (§11) |
-| **GitHub CLI** | ⛔ **`gh` 가 이 PC 에 없다.** 등재는 웹에서 저장소를 만들고 `git remote add` 하는 경로다 → `repo-publish` 스킬 |
+| **GitHub CLI** | ✅ **`gh` 2.100.0** (2026-09-10 winget 설치). ⚠ **PATH 에 안 잡힐 수 있다** — 전체 경로: `C:\Program Files\GitHub CLI\gh.exe`. ⚠⚠ **인증·계정·토큰 입력은 사용자만 한다** → `repo-publish` 스킬 |
 | 디스크 | C 여유 **19.0GB** (2026-09-10 실측). ⛔ D 드라이브 없음. **2GB 넘는 조달은 §9 판정 대상** |
 | 인터넷 조사 | WebSearch·WebFetch 사용 가능 → **`dataset-scout` 에 위임**(§5) |
 
@@ -238,7 +238,7 @@ C:\projects\rag-ontology-lab\
 3. **PowerShell·Bash 에 파이썬 코드를 인라인(`-c "..."`)으로 넣지 마라.** 따옴표·백슬래시가 깨진다. **스크래치패드에 `.py` 로 써서 실행**한다
 4. **⚠⚠ 한글이 든 긴 문서를 Bash heredoc 으로 쓰지 마라.** 2026-09-10 에 실제로 깨졌다(`unexpected EOF`). **`Write` 도구를 쓴다**
 5. **한글 파일을 읽고 쓸 때 인코딩을 명시한다.** `open(..., encoding="utf-8")`. Windows 기본은 cp949 라 안 적으면 깨진다
-6. **`gh` 가 없다.** GitHub 등재는 수동 remote 경로 (§2, `repo-publish` 스킬)
+6. **`gh` 는 PATH 에 안 잡힐 수 있다.** 전체 경로 `C:\Program Files\GitHub CLI\gh.exe` 로 부른다 (§2). ⚠⚠ **인증은 사용자만** — Claude 는 자격증명을 입력하지 않는다
 7. **KorQuAD 는 CC BY-ND 2.0 KR — 재배포 금지.** `data/external/` 은 `.gitignore` 에 들어 있다. **풀지 마라** (`data/DATA_CARD.md`)
 
 ---
@@ -366,7 +366,7 @@ Claude 는 뼈대와 테스트까지. **본체는 사용자다.** 막히면 `hin
 | §0-2 가정 확인 | ⛔ **미확인.** 새 세션 첫 턴 과업 |
 | `docs/stages/*.md` | ⛔ **뼈대만.** 각 단계 강의는 그 단계에 도달했을 때 쓴다 |
 | 측정 결과 | ⛔ **없음.** `outputs/metrics/` 비어 있음 — §13 결과 표를 아직 못 채운다 |
-| GitHub 등재 | ⛔ 원격 없음. 로컬 커밋만 (`repo-publish` 스킬) |
+| GitHub 등재 | 진행 중 — `gh` 설치 완료, **공개 저장소**로 등재 (사용자 결정 2026-09-10) |
 
 ---
 

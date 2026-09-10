@@ -1,11 +1,19 @@
 ---
 name: repo-publish
-description: GitHub 원격 저장소를 연결하고 다른 PC에서 이어받을 수 있게 만드는 절차. gh CLI가 없는 환경 기준이며, 커밋 전 점검·푸시 확인·다른 PC 이관 체크리스트가 들어 있다. "깃허브에 올려줘", "원격 설정해줘", "다른 PC에서 작업할 수 있게 해줘", 또는 Stage 11에서 쓴다.
+description: GitHub 원격 저장소를 연결하고 다른 PC에서 이어받을 수 있게 만드는 절차. gh CLI 사용법과 웹 수동 경로를 모두 담고, 커밋 전 점검·푸시 확인·다른 PC 이관 체크리스트가 들어 있다. "깃허브에 올려줘", "원격 설정해줘", "다른 PC에서 작업할 수 있게 해줘", 또는 Stage 11에서 쓴다.
 ---
 
 # GitHub 원격 연결과 다른 PC 이관
 
-`../../CLAUDE.md` §2 · §13. **이 PC 에는 `gh` CLI 가 없다.** 웹에서 저장소를 만들고 수동으로 remote 를 거는 경로다.
+`../../CLAUDE.md` §2 · §13.
+
+**`gh` CLI 는 설치돼 있다** (2.100.0, 2026-09-10). ⚠ PATH 에 안 잡힐 수 있으니 전체 경로로 부른다:
+
+```
+C:\Program Files\GitHub CLI\gh.exe
+```
+
+⚠⚠ **다만 인증은 사용자만 한다.** `gh auth login` 은 브라우저 흐름이고, Claude 는 자격증명을 입력하지 않는다.
 
 ## ⚠⚠ Claude 가 할 수 없는 것 — 먼저 명확히
 
@@ -48,17 +56,32 @@ git ls-files | head -60
 git ls-files | grep -E "external|\.venv|\.env|\.key|safetensors" || echo "OK — 금지 대상 없음"
 ```
 
-### A-2. 사용자가 GitHub 에서 저장소를 만든다
+### A-2. 저장소를 만든다
 
-사용자에게 안내할 것 (⚠ Claude 가 대신 하지 않는다):
+#### 경로 ① `gh` (인증이 돼 있을 때)
 
-1. github.com → New repository
-2. 이름 제안: **`rag-ontology-lab`**
-3. **공개 / 비공개** — 포트폴리오로 제출한다면 공개여야 링크를 낼 수 있다. ⚠ 다만 **아직 결과가 비어 있으므로** 학습이 어느 정도 진행된 뒤 공개로 바꾸는 것도 방법이다. **사용자에게 물어라**
-4. ⚠⚠ **README·.gitignore·LICENSE 를 GitHub 쪽에서 만들지 마라** — 이미 로컬에 있다. 만들면 첫 푸시에서 이력이 갈라진다
-5. 만들고 나온 URL 을 Claude 에게 알려준다
+```bash
+"/c/Program Files/GitHub CLI/gh.exe" auth status     # 먼저 확인
+"/c/Program Files/GitHub CLI/gh.exe" repo create rag-ontology-lab     --public --source=. --remote=origin     --description "<한 줄 설명>"
+```
 
-### A-3. remote 연결
+⚠ `--source=.` 는 **원격만 만들고 로컬 이력을 그대로 쓴다.** 푸시는 별도로 한다(A-5).
+⚠⚠ `--push` 를 붙이지 마라 — 푸시는 사용자 확인을 받고 하는 별도 단계다.
+
+인증이 안 돼 있으면 **사용자가 직접** 실행한다 (Claude 는 자격증명을 입력하지 않는다):
+
+```bash
+"/c/Program Files/GitHub CLI/gh.exe" auth login --web --git-protocol https
+```
+
+#### 경로 ② 웹 (gh 를 못 쓸 때)
+
+1. github.com → New repository, 이름 `rag-ontology-lab`
+2. **공개 / 비공개** — 포트폴리오로 제출한다면 공개여야 링크를 낼 수 있다. ⚠ 다만 **결과 표가 비어 있는 동안**은 비공개로 두고 나중에 바꾸는 것도 방법이다
+3. ⚠⚠ **README·.gitignore·LICENSE 를 GitHub 쪽에서 만들지 마라** — 이미 로컬에 있다. 만들면 첫 푸시에서 이력이 갈라진다
+4. 나온 URL 을 Claude 에게 알려준다
+
+### A-3. remote 연결 (경로 ② 일 때만)
 
 ```bash
 git remote add origin https://github.com/<사용자>/rag-ontology-lab.git

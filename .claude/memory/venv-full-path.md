@@ -6,7 +6,7 @@ metadata:
 ---
 
 이 PC 에서 파이썬은 반드시 **`.venv/Scripts/python.exe`** 로 부른다. `uv` 도 PATH 에 없어 전체 경로가 필요하다:
-`C:\Users\cvcv6\AppData\Local\Microsoft\WinGet\Packages\astral-sh.uv_Microsoft.Winget.Source_8wekyb3d8bbwe\uv.exe`
+`%LOCALAPPDATA%\Microsoft\WinGet\Packages\astral-sh.uv_Microsoft.Winget.Source_8wekyb3d8bbwe\uv.exe`
 
 **Why:** 시스템 `python` 은 **Microsoft Store 스텁**이라 부르면 죽는다. 2026-09-10 실측. `rag-ontology-lab` 의 venv 는 Python 3.12.14 이고 설치된 것은 numpy 2.5.3 · pyyaml 6.0.3 · pytest 9.1.1 **셋뿐**이다 — torch·sklearn·pandas·matplotlib 은 **없다**.
 

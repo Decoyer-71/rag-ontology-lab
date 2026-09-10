@@ -6,7 +6,7 @@
 
 <!-- ⚠ 아래 배지는 Stage 11(포트폴리오 패키징)에서 실제 수치로 교체합니다. 지금은 자리표시자입니다. -->
 
-**상태: 🚧 학습 진행 중 (Stage 0 / 12)** · Python 3.12 · 의존성 3개 (`numpy` `pyyaml` `pytest`)
+**상태: 🚧 학습 진행 중 (Stage 0 / 12)** · Python 3.12 · 의존성 3개 (`numpy` `pyyaml` `pytest`) · MIT
 
 ---
 

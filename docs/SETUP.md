@@ -22,7 +22,7 @@
 ## 1. 클론
 
 ```bash
-git clone https://github.com/<사용자>/rag-ontology-lab.git
+git clone https://github.com/Decoyer-71/rag-ontology-lab.git
 cd rag-ontology-lab
 ```
 
@@ -111,18 +111,48 @@ Stage 9 이전에는 필요 없습니다.
 `.claude/memory/` 는 **이동용 사본**입니다. Claude 가 실제로 읽는 곳은 저장소 밖입니다:
 
 ```
-%USERPROFILE%\.claude\projects\<프로젝트별 경로>\memory\
+%USERPROFILE%\.claude\projects\<세션 작업 디렉터리를 인코딩한 폴더>\memory\
 ```
 
-새 PC 에서 **직접 복사해 넣어야** 합니다. 안 하면 그 PC 의 세션은
-「사용자가 코드를 쓴다」·「기준선과 나란히 측정한다」 같은 **이 프로젝트의 규율 기억 없이** 시작합니다.
+⚠ **폴더 이름은 세션을 어느 디렉터리에서 열었는지에 따라 달라집니다.**
+`C:\` 에서 열면 `C--`, `C:\projects\rag-ontology-lab` 에서 열면 그 경로를 인코딩한 이름이 됩니다.
+그래서 **경로를 외우지 말고 찾으십시오.**
 
 ```powershell
-# 예시 — 실제 대상 경로는 그 PC 의 %USERPROFILE%\.claude\projects\ 아래에서 확인하십시오
-Copy-Item -Recurse -Force .claude\memory\* "$env:USERPROFILE\.claude\projects\<경로>\memory\"
+# ① 이 프로젝트 폴더에서 Claude Code 세션을 한 번 엽니다 (폴더가 그때 생깁니다)
+# ② 최근 수정 순으로 후보를 확인
+Get-ChildItem "$env:USERPROFILE\.claude\projects" | Sort-Object LastWriteTime -Descending | Select-Object -First 5 Name
+
+# ③ 그 폴더 아래에 memory\ 를 만들고 저장소 사본을 복사
+$dest = "$env:USERPROFILE\.claude\projects\<②에서 확인한 폴더>\memory"
+New-Item -ItemType Directory -Force $dest | Out-Null
+Copy-Item -Recurse -Force .claude\memory\* $dest
 ```
 
-⚠ `CLAUDE.md` 는 저장소에 있으므로 자동으로 따라옵니다. 메모리만 수동입니다.
+안 하면 그 PC 의 세션은 「사용자가 코드를 쓴다」·「기준선과 나란히 측정한다」 같은
+**이 프로젝트의 규율 기억 없이** 시작합니다.
+
+⚠ `CLAUDE.md` 와 `.claude/` 의 훅·스킬·에이전트는 **저장소에 있으므로 자동으로 따라옵니다.**
+수동이 필요한 것은 `memory/` 하나뿐입니다.
+
+### ⚠⚠ 5-1. git 신원도 PC 마다 지정해야 합니다
+
+이 프로젝트를 만든 PC 에는 git **전역 신원 설정이 없었습니다.** 없으면
+`fatal: unable to auto-detect email address` 로 **커밋이 아예 실패합니다.**
+
+```powershell
+git config --local user.name  "<커밋 저자명>"
+git config --local user.email "<GitHub 계정에 등록된 이메일>"
+```
+
+⚠ **GitHub 계정에 등록된 이메일**을 쓰십시오. 다른 이메일로 커밋하면
+프로필 기여도(contribution graph)에 안 잡힙니다 — 포트폴리오에서는 이게 눈에 띕니다.
+
+⚠ 값을 모르면 이 저장소의 기존 커밋에서 확인할 수 있습니다:
+
+```bash
+git log -1 --format="%an <%ae>"
+```
 
 ---
 

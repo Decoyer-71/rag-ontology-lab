@@ -110,7 +110,7 @@ C:\projects\rag-ontology-lab\
 | **venv 패키지** | ✅ 실제 설치분 전부: **numpy 2.5.3** · **pyyaml 6.0.3** · **pytest 9.1.1** (+ colorama · iniconfig · packaging · pluggy · pygments) |
 | ⛔ **없는 패키지** | **torch · sentence-transformers · transformers · scikit-learn · scipy · pandas · matplotlib · faiss · chromadb · langchain 은 설치돼 있지 않다.** **있다고 가정하고 코드를 쓰지 마라.** 필요하면 위 `uv pip install` 로 조달하고 §9 로 비용을 판정한다 |
 | ⚠ **numpy 2.x** | 메이저가 최신이다. **블로그·LLM 기억 속 관용구가 깨진다**(`np.float_` 삭제 등). §4 대로 **실제로 찍어 보고** 쓴다 |
-| git | ✅ 2.55.0.windows.3. 이 저장소는 **로컬만** — ⛔ **원격 없음** (§11) |
+| git | ✅ 2.55.0.windows.3. 원격 `origin` = https://github.com/Decoyer-71/rag-ontology-lab (**공개**). ⚠ 전역 신원 설정이 **없다** — 저장소마다 `git config --local user.name/email` 지정 |
 | **GitHub CLI** | ✅ **`gh` 2.100.0** (2026-09-10 winget 설치). ⚠ **PATH 에 안 잡힐 수 있다** — 전체 경로: `C:\Program Files\GitHub CLI\gh.exe`. ⚠⚠ **인증·계정·토큰 입력은 사용자만 한다** → `repo-publish` 스킬 |
 | 디스크 | C 여유 **19.0GB** (2026-09-10 실측). ⛔ D 드라이브 없음. **2GB 넘는 조달은 §9 판정 대상** |
 | 인터넷 조사 | WebSearch·WebFetch 사용 가능 → **`dataset-scout` 에 위임**(§5) |
@@ -366,7 +366,7 @@ Claude 는 뼈대와 테스트까지. **본체는 사용자다.** 막히면 `hin
 | §0-2 가정 확인 | ⛔ **미확인.** 새 세션 첫 턴 과업 |
 | `docs/stages/*.md` | ⛔ **뼈대만.** 각 단계 강의는 그 단계에 도달했을 때 쓴다 |
 | 측정 결과 | ⛔ **없음.** `outputs/metrics/` 비어 있음 — §13 결과 표를 아직 못 채운다 |
-| GitHub 등재 | 진행 중 — `gh` 설치 완료, **공개 저장소**로 등재 (사용자 결정 2026-09-10) |
+| GitHub 등재 | ✅ **완료** (2026-09-10) — [github.com/Decoyer-71/rag-ontology-lab](https://github.com/Decoyer-71/rag-ontology-lab) · **공개** · `main` · 커밋 7개 |
 
 ---
 

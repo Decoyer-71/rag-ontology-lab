@@ -1,0 +1,5 @@
+#!/bin/sh
+# pre-push — 개인정보 관문 ② 올라갈 커밋 전부 (CLAUDE.md §15-5)
+# ⚠ 두 번째 방어선이다. pre-commit 을 거치지 않은 커밋(훅을 켜기 전에 만든 커밋 등)도 여기서 걸린다.
+. "$(dirname "$0")/_lib.sh"
+run_scan push "$@"

@@ -1,0 +1,5 @@
+#!/bin/sh
+# post-commit — 자동 푸시 (CLAUDE.md §15-5)
+# 「떠나는 PC 에서 푸시를 잊는 사고」를 원천적으로 없앤다. 끄려면: git config lab.autopush false
+. "$(dirname "$0")/_lib.sh"
+auto_push commit

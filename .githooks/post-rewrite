@@ -1,0 +1,6 @@
+#!/bin/sh
+# post-rewrite — pull --rebase 로 다시 쌓인 커밋을 올린다 (CLAUDE.md §15-5)
+# ⚠ amend 는 올리지 않는다. 이미 올라간 커밋을 고친 것이면 강제 푸시가 필요하고, 그건 사람이 판단한다.
+[ "$1" = "rebase" ] || exit 0
+. "$(dirname "$0")/_lib.sh"
+auto_push rebase

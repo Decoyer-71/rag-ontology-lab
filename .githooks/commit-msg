@@ -1,0 +1,4 @@
+#!/bin/sh
+# commit-msg — 개인정보 관문 ① 커밋 메시지 (CLAUDE.md §15-5)
+. "$(dirname "$0")/_lib.sh"
+run_scan message "$1"

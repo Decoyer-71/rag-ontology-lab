@@ -1,0 +1,4 @@
+#!/bin/sh
+# pre-commit — 개인정보 관문 ① 스테이징된 변경 (CLAUDE.md §15-5)
+. "$(dirname "$0")/_lib.sh"
+run_scan staged

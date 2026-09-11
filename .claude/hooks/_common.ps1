@@ -121,6 +121,47 @@ function Get-Progress {
     }
 }
 
+function Get-MemoryLinkStatus {
+    <#
+      .SYNOPSIS
+        이 저장소의 Claude 메모리 폴더가 저장소 `.claude\memory` 로 정션 연결돼 있는지 본다. (CLAUDE.md §15-4)
+
+      .DESCRIPTION
+        Claude Code 는 세션을 연 경로의 **영숫자가 아닌 글자를 전부 `-` 로 바꾼 이름**으로
+        `%USERPROFILE%\.claude\projects\` 아래에 폴더를 만든다.
+          C:\projects\rag-ontology-lab → C--projects-rag-ontology-lab   (2026-09-11 노트북 실측으로 대조)
+        ⚠ 내부 규칙이라 바뀔 수 있다. 바뀌면 State 가 missing 으로 나와 preflight 가 알린다.
+
+      .OUTPUTS
+        [pscustomobject] State(linked|missing|plain|elsewhere) / Real / Target / LinkTarget
+    #>
+    param([string]$Root)
+
+    $enc    = ($Root.TrimEnd('\', '/') -replace '[^A-Za-z0-9]', '-')
+    $real   = Join-Path $env:USERPROFILE ".claude\projects\$enc\memory"
+    $target = Join-Path $Root '.claude\memory'
+
+    $state = 'missing'
+    $linkTarget = $null
+    $item = Get-Item -LiteralPath $real -Force -ErrorAction SilentlyContinue
+    if ($item) {
+        if ($item.Attributes -band [System.IO.FileAttributes]::ReparsePoint) {
+            $linkTarget = [string](@($item.Target)[0])
+            $norm = $linkTarget -replace '^\\\\\?\\', '' -replace '^\\\?\?\\', ''
+            if ($norm.TrimEnd('\') -ieq $target.TrimEnd('\')) { $state = 'linked' } else { $state = 'elsewhere' }
+        } else {
+            $state = 'plain'
+        }
+    }
+
+    return [pscustomobject]@{
+        State      = $state
+        Real       = $real
+        Target     = $target
+        LinkTarget = $linkTarget
+    }
+}
+
 function Count-LogicLines {
     <#
       .SYNOPSIS

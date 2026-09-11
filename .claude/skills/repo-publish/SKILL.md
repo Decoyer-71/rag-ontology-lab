@@ -23,7 +23,7 @@ C:\Program Files\GitHub CLI\gh.exe
 | 저장소 생성 (웹 UI) | **사용자만** |
 | Personal Access Token 발급·입력 | **사용자만** |
 | `git remote add` · 커밋 · 브랜치 | Claude 가 한다 |
-| **`git push`** | ⚠⚠ **사용자 확인을 받고** 한다 — 외부로 내보내는 되돌리기 어려운 동작이다 |
+| **`git push`** | ⚠⚠ **사용자 확인을 받고** 한다 — 외부로 내보내는 되돌리기 어려운 동작이다. ⚠ 개인정보 관문을 켠 PC 에서는 **커밋이 곧 푸시**다(`post-commit`) — 커밋 전에 확인한다 (CLAUDE.md §15-5) |
 
 ⚠ 승인은 **한 번에 하나**다. 첫 푸시를 승인받았다고 이후 푸시까지 승인된 것이 아니다.
 
@@ -141,15 +141,17 @@ uv pip install --python .venv/Scripts/python.exe -r requirements.txt
 .venv/Scripts/python.exe data/fetch_korquad.py
 ```
 
-### ⚠⚠ 5. 메모리는 자동으로 안 따라온다
+### ⚠⚠ 5. 메모리와 git 훅은 PC 마다 한 번 켠다
 
-`.claude/memory/` 는 **이동용 사본**이다. Claude 가 실제로 읽는 곳은 저장소 밖이다:
+Claude 가 실제로 읽는 메모리는 저장소 밖(`%USERPROFILE%\.claude\projects\<경로 인코딩>\memory\`)이다.
+정션으로 저장소 `.claude/memory/` 에 이으면 그다음부터 git 으로 따라온다 (CLAUDE.md §15-4):
 
+```powershell
+.claude\hooks\link_memory.ps1          # 메모리 정션 — 안 하면 그 PC 의 세션은 규율 기억 없이 돈다
+git config core.hooksPath .githooks    # 개인정보 관문 + 자동 푸시 (CLAUDE.md §15-5)
 ```
-%USERPROFILE%\.claude\projects\<프로젝트 해시>\memory\
-```
 
-새 PC 에서 **직접 복사해 넣어야** 한다. 안 하면 그 PC 의 세션은 이 프로젝트의 규율 기억 없이 시작한다.
+⚠ 두 PC 가 같은 커밋 이메일을 쓴다 (docs/SETUP.md §5-1). 이메일 공개는 사용자가 허용했다(2026-09-11) — 관문은 내 커밋 이메일을 막지 않는다.
 
 ### 6. 첫 세션에서 확인할 것
 
@@ -165,13 +167,14 @@ uv pip install --python .venv/Scripts/python.exe -r requirements.txt
 ## C. 평소 동기화 (PC 두 대를 오갈 때)
 
 ```bash
-# 작업 시작 전 — 항상
+# 작업 시작 전 — 세션을 열면 sync_check 가 깨끗할 때 자동으로 받는다 (CLAUDE.md §15-3). 손으로 할 때:
 git pull --rebase
 
 # 작업 끝 — 단계별로 쪼개서
 git add -A
 git commit -m "Stage N: <능력 목표 한 줄>"
-git push        # ⚠ 사용자 확인
+# git push 는 자동이다 — 커밋하면 post-commit 이 개인정보 관문을 거쳐 올린다 (CLAUDE.md §15-5)
+# ⚠ 그래서 커밋 = 공개다. Claude 가 커밋할 때는 사용자 확인. 관문을 안 켠 PC 면 직접 git push
 ```
 
 ⚠ **`progress.json` 이 충돌하기 쉽다.** 두 PC 에서 같은 단계를 진행하면 그렇다.

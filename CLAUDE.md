@@ -47,7 +47,7 @@
 |---|---|---|---|
 | A1 | **코퍼스 도메인** | ✅ **한빛텔레콤 가상사례** (교본이 처음부터 끝까지 쓴 그 사례) | `data/synthetic/` 를 **그대로 쓴다.** 교본과 사례가 같아 참조 구현 대조(§10 원칙 2)가 쉽다. ⚠ 대신 채점표가 이미 만들어져 있어 **Stage 0 은 「만들기」가 아니라 「검수」**다 — 아래 주의 참조 |
 | A2 | **실습 강도** | ✅ **Stage 1~5 빈칸 채우기**(시그니처·독스트링·테스트 제공) **→ Stage 6~11 백지**(명세와 테스트만) | 초반 이탈을 막고 후반에 **설계 경험**을 남긴다. Stage 6 부터는 파일 구조부터 사용자가 정한다 |
-| A3 | **Stage 9 신경망 임베딩 조달 시점** | ✅ **Stage 8 을 끝낸 뒤 판단** | ⚠ **이유가 바뀌었다.** 디스크는 더 이상 제약이 아니다(D 여유 324GB). **TF-IDF 를 직접 짜 본 뒤에 교체해야 개선폭을 숫자로 잴 수 있기 때문**이다(§5-D') |
+| A3 | **Stage 9 신경망 임베딩 조달 시점** | ✅ **Stage 8 을 끝낸 뒤 판단** | ⚠ **이유가 바뀌었다.** **TF-IDF 를 직접 짜 본 뒤에 교체해야 개선폭을 숫자로 잴 수 있기 때문**이다(§5-D'). ⚠ 디스크는 PC 마다 다르다 — 데스크탑은 제약이 아니지만(D 여유 324GB) **노트북은 C 여유 17GB 뿐이다**(§2). 판단할 때 **어느 PC 에서 Stage 9·10 을 하는가**도 같이 정한다 |
 
 ⚠⚠ **A1 의 대가 — Stage 0 이 헐거워졌다.**
 `tests/test_stage00_goldenset.py` 8건이 **이미 전부 통과한다.** 골든셋 24문항·역량질문 12문항이
@@ -63,10 +63,10 @@
 ## 1. 디렉터리 구조
 
 ```
-D:\projects\rag-ontology-lab\
+<저장소 루트>\                     ← ⚠ PC 마다 다르다 — 데스크탑 D:\projects\… · 노트북 C:\projects\… (§2)
 ├── CLAUDE.md                      ← 이 파일 (학습 규율)
 ├── README.md                      ← ⭐ GitHub 정면. 사용자가 아니라 채용 담당자용 (§13)
-├── .venv\                         ← ⚠ 커밋 안 함. Python 3.12.13 (§2)
+├── .venv\                         ← ⚠ 커밋 안 함. Python 3.12.x — 패치 버전은 PC 마다 다르다 (§2)
 ├── .claude\
 │   ├── settings.json              ← 훅 등록 + 권한 규칙
 │   ├── agents\                    ← 위임용 sub-agent 4종
@@ -74,14 +74,17 @@ D:\projects\rag-ontology-lab\
 │   ├── skills\                    ← next-step · hint · checkpoint · **review** · viz-build · repo-publish
 │   ├── hooks\                     ← ⭐ guard_handson (대필 차단) · guard_spoiler · guard_claim
 │   │                                 ⭐ **guard_review** (복습 게이트) · review_due · commit_watch (§14)
-│   │                                 ⭐ **guard_sync** (동기화 게이트) · sync_check (§15)
-│   ├── memory\                    ← ⚠ **이동용 사본이다.** Claude 가 실제로 읽는 곳은
-│   │                                 `%USERPROFILE%\.claude\projects\...` → `docs/SETUP.md`
+│   │                                 ⭐ **guard_sync** (동기화 게이트) · sync_check · session_start(순서 보장) · leave_check(떠나기 전 점검) (§15)
+│   │                                 link_memory — 메모리 정션 설정 도구. 훅 아님 (§15-4)
+│   ├── memory\                    ← ⭐ Claude 의 실제 메모리 폴더가 **정션으로 여기를 가리킨다** (§15-4).
+│   │                                 ⚠⚠ 그래서 **공개된다** — 개인정보를 적지 않는다 (§15-5)
 │   └── state\
 │       ├── progress.json          ← ⭐ 진도 상태. 훅과 스킬이 이 파일을 읽는다
 │       ├── review.json            ← ⭐ 복습 카드·간격·건너뛴 기록 (§14)
 │       ├── review_session.json    ← 이번 세션 복습 계획과 **게이트**. 세션마다 다시 계산된다
-│       └── sync_session.json      ← 원격 동기화 판정 (§15). ⚠ 커밋 안 함 — PC 마다 다르다
+│       └── sync_session.json      ← 원격 동기화 판정 · leave_session.json(떠나기 전 알림 간격) (§15). ⚠ `*_session.json` 은 커밋 안 함
+├── .githooks\                     ← ⭐ 개인정보 관문(pre-commit·commit-msg·pre-push) + 자동 푸시(post-commit·post-rewrite) (§15-5)
+│                                     ⚠ PC 마다 `git config core.hooksPath .githooks` 한 번 — 커밋으로는 켜지지 않는다
 ├── docs\
 │   ├── CURRICULUM.md              ← 12단계 전체 설계도
 │   ├── PROGRESS.md                ← 사람이 읽는 진도표 + 막힌 지점 기록 (§13 재료)
@@ -113,19 +116,39 @@ D:\projects\rag-ontology-lab\
 
 ---
 
-## 2. 환경 실측값 (2026-09-10 실측)
+## 2. 환경 실측값 — ⚠⚠ PC 가 두 대라 **열이 둘이다** (§15)
+
+**어느 PC 인가** — 저장소 루트로 가른다: `D:\` 면 데스크탑, `C:\` 면 노트북.
+
+⚠⚠ **PC 고유 값은 그 PC 의 열만 고친다.** 다른 PC 의 값이 지금 PC 실측과 다르다고 「드리프트」로 보고 덮어쓰지 마라 —
+2026-09-10 에 실제로 그렇게 노트북 값이 「틀렸다」로 지워졌다(§6 지뢰 11). 아래 **공통** 표가 어긋날 때만 결함이다.
+
+| 항목 | 🖥 데스크탑 (집) | 💻 노트북 |
+|---|---|---|
+| 실측일 | 2026-09-10 기록 — ⚠ 다음 데스크탑 세션에서 재실측 | ✅ 2026-09-11 |
+| **저장소 루트** | `D:\projects\rag-ontology-lab` | `C:\projects\rag-ontology-lab` |
+| 디스크 | D 931GB (여유 **324GB**) · C 여유 66GB | ⚠ **C 하나뿐 — 여유 17GB** (D 드라이브 없음) |
+| 파이썬 (`.venv`) | 3.12.13 | 3.12.14 |
+| `uv` | 0.12.12 | 0.12.9 |
+| git | 2.55.0.windows.3 | 2.55.0.windows.3 |
+| `gh` | ⚠ 기록 없음 | 2.100.0 · 로그인됨 |
+| git 신원 | 전역(global) 설정 있음 | ⚠ **전역 없음** — 이 저장소에만 local 로 설정 |
+| 메모리 정션 (§15-4) | ⚠ 아직 안 함 | ✅ 2026-09-11 연결 |
+| 개인정보 관문 (§15-5) | ⚠ 아직 안 켬 | ✅ 2026-09-11 켬 |
+
+**공통 — 두 PC 가 같아야 하는 것**
 
 | 항목 | 상태 |
 |---|---|
-| **작업용 파이썬** | ✅ **`.venv\Scripts\python.exe` — Python 3.12.13** (`uv` 가 받은 관리형 CPython). 모든 코드는 **이 인터프리터로** 돌린다 |
+| **작업용 파이썬** | ✅ **`.venv\Scripts\python.exe`** — Python 3.12.x (`uv` 가 받은 관리형 CPython. 패치 버전은 위 PC 별 표). 모든 코드는 **이 인터프리터로** 돌린다 |
 | 시스템 파이썬 | ⛔ **없다.** `python` 은 **Microsoft Store 스텁**이라 부르면 죽는다 |
-| **패키지 조달** | `uv` **0.12.12**. ⚠⚠ **PATH 에 안 잡힌다** — 전체 경로로 부른다:<br>`%LOCALAPPDATA%\Microsoft\WinGet\Packages\astral-sh.uv_Microsoft.Winget.Source_8wekyb3d8bbwe\uv.exe`<br>추가는 `uv pip install --python D:\projects\rag-ontology-lab\.venv\Scripts\python.exe <패키지>` |
-| **venv 패키지** | ✅ 실제 설치분 전부: **numpy 2.5.3** · **pyyaml 6.0.3** · **pytest 9.1.1** (+ colorama · iniconfig · packaging · pluggy · pygments) |
+| **패키지 조달** | `uv` (버전은 위 PC 별 표). ⚠⚠ **PATH 에 안 잡힌다** — 전체 경로로 부른다:<br>`%LOCALAPPDATA%\Microsoft\WinGet\Packages\astral-sh.uv_Microsoft.Winget.Source_8wekyb3d8bbwe\uv.exe`<br>추가는 `uv pip install --python .venv\Scripts\python.exe <패키지>` — ⚠ **상대경로로 쓴다.** 저장소 루트가 PC 마다 다르다 |
+| **venv 패키지** | ✅ 실제 설치분 전부: **numpy 2.5.3** · **pyyaml 6.0.3** · **pytest 9.1.1** (+ colorama · iniconfig · packaging · pluggy · pygments) — `requirements.txt` 고정이라 **두 PC 가 같다** (노트북 2026-09-11 대조 일치) |
 | ⛔ **없는 패키지** | **torch · sentence-transformers · transformers · scikit-learn · scipy · pandas · matplotlib · faiss · chromadb · langchain 은 설치돼 있지 않다.** **있다고 가정하고 코드를 쓰지 마라.** 필요하면 위 `uv pip install` 로 조달하고 §9 로 비용을 판정한다 |
 | ⚠ **numpy 2.x** | 메이저가 최신이다. **블로그·LLM 기억 속 관용구가 깨진다**(`np.float_` 삭제 등). §4 대로 **실제로 찍어 보고** 쓴다 |
-| git | ✅ 2.55.0.windows.3. 원격 `origin` = https://github.com/Decoyer-71/rag-ontology-lab (**공개**). ✅ 전역 신원 **있다** (2026-09-10 재실측). ⚠⚠ **실제 값을 이 파일에 적지 마라** — 공개 저장소다. 확인은 `git config --global user.email` 로 한다. ⚠ 옛 판은 「전역 신원 없음 → 저장소마다 local 지정」이었다 — **이제 불필요하다** |
-| **GitHub CLI** | ✅ **`gh` 2.100.0** (2026-09-10 winget 설치). ⚠ **PATH 에 안 잡힐 수 있다** — 전체 경로: `C:\Program Files\GitHub CLI\gh.exe`. ⚠⚠ **인증·계정·토큰 입력은 사용자만 한다** → `repo-publish` 스킬 |
-| 디스크 | ✅ **작업 루트는 D 다.** D 931GB (여유 **324GB**) · C 여유 **66GB** (2026-09-10 재실측). ⚠ 옛 판은 「C 여유 19GB · D 없음」이었다 — **프로젝트가 D 로 옮겨졌다.** 여유가 넉넉해져 **2~3GB 조달이 더는 병목이 아니다**(§9 재판정) |
+| git | 원격 `origin` = https://github.com/Decoyer-71/rag-ontology-lab (**공개**). 버전·신원 설정 위치는 위 PC 별 표. 커밋 이메일은 공개 이력에 있고 **사용자가 공개를 허용했다**(2026-09-11, §15-5) — 두 PC 가 같은 이메일을 쓴다. ⚠ 그래도 실제 값을 문서에 옮겨 적을 이유는 없다 |
+| **GitHub CLI** | `gh` (설치 여부·버전은 위 PC 별 표). ⚠ **PATH 에 안 잡힐 수 있다** — 전체 경로: `C:\Program Files\GitHub CLI\gh.exe`. ⚠⚠ **인증·계정·토큰 입력은 사용자만 한다** → `repo-publish` 스킬 |
+| 줄바꿈 | `.gitattributes` 가 고정한다 — PC 마다 `core.autocrlf` 가 달라도 가짜 diff 가 안 뜬다 (노트북은 시스템 설정 `autocrlf=true`) |
 | 인터넷 조사 | WebSearch·WebFetch 사용 가능 → **`dataset-scout` 에 위임**(§5) |
 
 **호출 규약** — PATH 에 등록하지 않았다. 항상 전체 경로로 부른다:
@@ -256,6 +279,10 @@ D:\projects\rag-ontology-lab\
 8. **⚠⚠ `sed` 로 윈도우 경로(`D:\projects\...`)를 치환하지 마라.** 2026-09-10 에 실제로 깨졌다 — 백슬래시가 `\r`(CR)·`\p` 로 먹혀 `D:projectsag-ontology-lab` 가 나왔다. **백슬래시가 든 치환은 파이썬 스크립트로 한다**(지뢰 3과 같은 뿌리)
 9. **pytest 한글 테스트명이 콘솔에서 깨진다.** 윈도우 콘솔이 cp949 라서다. `PYTHONIOENCODING=utf-8` 을 붙이면 정상이다. ⚠ 파이썬 스크립트 자신의 `print` 도 같은 이유로 죽는다 → `sys.stdout.reconfigure(encoding="utf-8")`
 10. **⚠ `PYTHONIOENCODING=utf-8 .venv/Scripts/python.exe ...` 처럼 환경변수를 앞에 붙이면 `.claude/settings.json` 의 허용 규칙 `Bash(.venv/Scripts/python.exe *)` 에 안 걸려 권한이 거부된다.** 스크립트 안에서 인코딩을 세우고, 명령은 허용 규칙 모양 그대로 부른다
+11. **⚠⚠ PC 고유 값을 공용 사실처럼 적지 마라.** 2026-09-10 에 데스크탑 세션이 노트북 값(`C:\` 루트 · D 드라이브 없음)을 「드리프트」로 보고 「둘 다 틀렸다」며 지웠다 — 2026-09-11 노트북 실측으로는 **둘 다 맞았다.** §2 는 PC 별 열로 적고, 메모리에는 PC 고유 값을 적지 않는다
+12. **⚠⚠ 같은 이벤트의 훅은 병렬로 돈다.** `settings.json` 에 적은 순서는 실행 순서가 아니다 (⚠2차 공식 hooks 문서 · ✅ 2026-09-11 세션 출력 순서가 등록 순서와 달랐다). 순서가 필요하면 **스크립트 하나로 묶는다** → `session_start.ps1`
+13. **⚠⚠ 커밋 이메일은 파일이 아니라 커밋에 박힌다.** 파일에서 개인 식별자를 지워도(`443176c`) 커밋 작성자 이메일은 그대로 공개된다. 2026-09-11 확인 — 그때까지의 커밋 전부가 noreply 가 아닌 주소였다. → **사용자 판단: 이메일 공개는 허용한다**(계좌·전화·비밀번호와 같은 층이 아니다). 관문은 내 커밋 이메일을 막지 않는다 (§15-5)
+14. **⚠⚠ PowerShell 5.1 에서 `[string](& git ...)` 은 출력이 없으면 `$null` 이다.** 거기에 `.Trim()` 을 부르면 `$ErrorActionPreference = 'SilentlyContinue'` 아래서 **그 if 문 전체가 조용히 건너뛰어진다** — 2026-09-11 에 preflight 의 「관문 꺼짐」 경고가 실제로 이렇게 사라졌다. 네이티브 명령 출력은 `(& git ... | Out-String).Trim()` 으로 받는다
 
 ---
 
@@ -332,7 +359,7 @@ Claude 는 뼈대와 테스트까지. **본체는 사용자다.** 막히면 `hin
 | TF-IDF · BM25 · 코사인 · RRF | numpy(**설치됨**) | **가장 쌈** | 전부 직접 구현 대상 |
 | 그래프 탐색(BFS·다중홉) | 표준 라이브러리 | **가장 쌈** | ⛔ `networkx` 미설치 — 필요 없다 |
 | KorQuAD 다운로드 (Stage 10) | `fetch_korquad.py` | 쌈 (약 40MB) | ⚠⚠ **CC BY-ND — 재배포 금지** |
-| **신경망 임베딩** (Stage 9) | ⛔ **torch·sentence-transformers 미설치** — `uv` 조달 | **⚠ 약 2~3GB. D 여유 324GB — 용량 제약 아님** | **조달 전 사용자에게 확인한다** |
+| **신경망 임베딩** (Stage 9) | ⛔ **torch·sentence-transformers 미설치** — `uv` 조달 | **⚠ 약 2~3GB (⚠⚠추론).** 데스크탑은 제약 아님(D 여유 324GB) · ⚠ **노트북은 C 여유 17GB 라 빠듯하다** | **조달 전 사용자에게 확인한다.** 어느 PC 에서 할지도 같이 정한다 (§0-2 A3) |
 | 재순위(Cross-Encoder) | ⛔ 미설치 — 위와 같은 스택 | 위와 같음 | Stage 9 를 한 뒤에만 의미가 있다 |
 | 벡터 DB(faiss·chroma) | ⛔ 미설치 | 중간 | ⚠ **이 프로젝트에 필요 없다.** 교본 §2-4 — *그래프 DB 는 대부분 필요 없다* 와 같은 판단. **넣으면 오히려 §13 감점**(도구 나열은 이해의 증거가 아니다) |
 | LLM 호출 (생성 단계) | API 키 필요 | ⚠ **사용자만 결정 가능** | Stage 8 전에 **모아서 한 번에** 묻는다. ⚠ 없어도 Stage 8 은 성립한다(검색·규칙 검사까지가 본체) |
@@ -380,8 +407,9 @@ Claude 는 뼈대와 테스트까지. **본체는 사용자다.** 막히면 `hin
 |---|---|
 | 환경 구축 | ✅ 완료 (2026-09-10). venv · `.claude` · 코퍼스 · 뼈대 · 테스트 |
 | 복습 시스템 (§14) | ✅ 완료 (2026-09-10). 훅 3종 · `labkit/review.py` · `review` 스킬. ⚠ **카드 0장** — Stage 1 을 닫는 순간부터 실제로 돈다 |
-| 동기화 게이트 (§15) | ✅ 완료 (2026-09-10). 훅 2종. **PC 두 대를 번갈아 쓰는 것이 확정 전제다** |
-| 자가시험 | ✅ **30/30 통과** (guard_handson 5 · guard_spoiler 3 · guard_claim 2 · guard_review 12 · guard_sync 8) |
+| 동기화 (§15) | ✅ 2026-09-10 게이트 · ✅ 2026-09-11 자동 받기(ff-only) · 순서 보장(`session_start`) · 떠나기 전 점검(Stop) · 메모리 정션(노트북 완료, 데스크탑 미실행). **PC 두 대를 번갈아 쓰는 것이 확정 전제다** |
+| 개인정보 관문·자동 푸시 (§15-5) | ✅ **노트북 켬** (2026-09-11) · ⚠ 데스크탑 미활성 — 다음 데스크탑 세션에서 `git config core.hooksPath .githooks` |
+| 자가시험 | ✅ **54/54 통과** (2026-09-11 노트북 — guard_handson 5 · guard_spoiler 3 · guard_claim 2 · guard_review 12 · guard_sync 8 · 샌드박스 24: 개인정보 관문 13 · 자동 푸시 2 · 자동 받기 3 · 떠나기 전 점검 6) · `privacy_scan.py selftest` 39/39 |
 | 학습 진행 | ⏸ **미착수.** 사용자 지시로 새 세션에서 시작 |
 | §0-2 가정 확인 | ✅ **완료 (2026-09-10).** A1 한빛텔레콤 · A2 1~5 빈칸→6~11 백지 · A3 Stage 8 이후 판단 |
 | `docs/stages/*.md` | ⛔ **뼈대만.** 각 단계 강의는 그 단계에 도달했을 때 쓴다 |
@@ -562,8 +590,10 @@ RAG 튜토리얼 저장소는 널려 있다. **LangChain 몇 줄로 돌린 데�
 
 ### 14-5. 공백기간 (아이디어 5)
 
-SessionStart 에서 `commit_watch.ps1` 이 `git log` 로 마지막 학습 커밋 시각을 기록하고, 이어서 `review_due.ps1` 이 그 값으로 공백을 계산해 게이트를 정한다. 조달 0.
-⚠ git 을 읽는 것은 `commit_watch.ps1` 뿐이다 — `review_due.ps1` 은 기록된 값만 본다. **등록 순서가 뒤집히면 공백이 하루 늦게 반영된다.**
+SessionStart 에서 `session_start.ps1` 이 **원격 받기(`sync_check`) → 학습 커밋 따라잡기(`commit_watch`) → 공백 계산·게이트(`review_due`)** 순서로 부른다. 조달 0.
+⚠ git 을 읽는 것은 `commit_watch.ps1` 뿐이다 — `review_due.ps1` 은 기록된 값만 본다.
+⚠⚠ 옛 판은 이 순서를 「settings.json 등록 순서」로 보장한다고 적었다 — **성립하지 않는다.** 같은 이벤트의 훅은 병렬로 돈다(§6 지뢰 12).
+그래서 한 스크립트가 차례로 부른다. 순서가 틀리면 다른 PC 에서 이미 푼 카드를 다시 배정한다(§15-3).
 
 ⚠ **함정 — 공백이 길다고 카드를 쌓으면 재시작 자체를 막는다.** §9 에서 가장 비싼 자원이 사용자 시간이다.
 
@@ -591,8 +621,9 @@ SessionStart 에서 `commit_watch.ps1` 이 `git log` 로 마지막 학습 커밋
 | 상태 | `.claude/state/review.json` | 카드·간격·건너뛴 기록·마지막 학습 시각 |
 | 세션 계획 | `.claude/state/review_session.json` | 이번 세션 카드와 **게이트**. 세션마다 다시 계산 |
 | 로그 | `outputs/metrics/review_log.json` | ⭐ 모든 인출 결과. **파라미터를 감이 아니라 데이터로 고치는 근거** |
-| 따라잡기 | `.claude/hooks/commit_watch.ps1` | SessionStart. 학습 커밋 감지 |
-| 계획·배너 | `.claude/hooks/review_due.ps1` | SessionStart. 공백 계산 · 게이트 결정 |
+| 순서 | `.claude/hooks/session_start.ps1` | SessionStart. 원격 받기 → 배너 → 따라잡기 → 계획을 **차례로** 부른다 (§6 지뢰 12) |
+| 따라잡기 | `.claude/hooks/commit_watch.ps1` | 학습 커밋 감지 — 원격 받기 **뒤에** 돈다 |
+| 계획·배너 | `.claude/hooks/review_due.ps1` | 공백 계산 · 게이트 결정 — **맨 마지막에** 돈다 |
 | ⭐ 게이트 | `.claude/hooks/guard_review.ps1` | PreToolUse. **복습 없이 새 단계 못 연다** |
 | 절차 | `.claude/skills/review/SKILL.md` | 인출 방식으로 카드를 돌리는 법 |
 | 카드 생성 | `.claude/skills/checkpoint/SKILL.md` 7절 | ⚠⚠ **여기서 안 만들면 그 단계는 영영 복습되지 않는다** |
@@ -624,10 +655,14 @@ git push                 # 끝 — 떠나기 전에 반드시
 ```
 
 ⚠ 두 번째가 더 자주 깨진다. **PC A 에서 푸시를 잊고 PC B 를 켜는 것**이 가장 흔한 사고다.
+⚠⚠ 그리고 그 사고는 **받는 쪽(B)에서 보이지 않는다** — B 는 원격만 보는데, 원격은 A 가 올리기 전 그대로다.
+
+⭐ **2026-09-11 부터 둘 다 자동이다** — 받기는 `sync_check` 가(§15-3), 올리기는 `post-commit` 이(§15-5, 관문을 켠 PC).
+손으로 할 일은 **커밋** 하나이고, 그것도 떠나기 전 점검이 알려 준다(§15-6).
 
 ### 15-3. ⭐ 게이트 — 여기서도 경고가 아니라 차단이다
 
-`sync_check.ps1` 이 SessionStart 에 `git fetch` 로 상태를 재고,
+`sync_check.ps1` 이 SessionStart 에 `git fetch` 로 상태를 재고 **안전하면 받고**(아래 `behind`),
 `guard_sync.ps1` (PreToolUse) 이 그 판정으로 막는다. 막는 범위는 §14-4 와 **같다** —
 `next-step` · `docs/stages/` · `tests/test_stage*` · `src/raglab` 새 파일 · `progress.json`.
 
@@ -635,7 +670,7 @@ git push                 # 끝 — 떠나기 전에 반드시
 |---|---|---|
 | `clean` | 원격과 같다 | 통과 |
 | `ahead` | 푸시만 안 됐다 | ⚠ **경고만.** 떠나기 전에 할 일이지 지금 막을 일이 아니다 — 여기서 막으면 작업 자체가 안 된다 |
-| `behind` | 다른 PC 작업이 안 받아져 있다 | ⛔ **차단** |
+| `behind` | 다른 PC 작업이 안 받아져 있다 | ⭐ **내 쪽 새 커밋 0 · 추적 파일 변경 0 이면 자동으로 받는다**(`merge --ff-only` — 병합이 일어날 수 없어 잃는 것이 없다) → `clean`. **미커밋 변경이 있으면 ⛔ 차단** |
 | `diverged` | 이력이 갈라졌다 | ⛔ **차단** |
 | 판정 없음 | 오프라인이거나 훅이 못 돌았다 | 통과 (fail-open) |
 
@@ -645,13 +680,51 @@ git push                 # 끝 — 떠나기 전에 반드시
 ⚠ `behind` 를 차단하는 이유는 되돌리는 비용 때문이다. `pull` 한 번이 5초고,
 갈라진 `review.json` 을 손으로 합치는 것은 「어느 쪽이 맞는가」를 사람이 판단해야 하는 일이다.
 
-### 15-4. 커밋으로 따라오지 **않는** 것 넷
+### 15-4. 커밋으로 따라오지 **않는** 것 다섯 — 둘은 PC 마다 **한 번** 켠다
 
 새 PC 에서는 클론만으로 안 돈다. 절차는 `docs/SETUP.md`, 여기엔 목록만.
 
 1. **`.venv/`** — `uv` 로 다시 만든다. ⚠ `uv` 경로는 PC 마다 다르다
-2. **⚠⚠ `%USERPROFILE%\.claude\projects\<경로 인코딩>\memory\`** — Claude 가 실제로 읽는 메모리다.
-   저장소의 `.claude/memory/` 는 **이동용 사본**일 뿐이라 손으로 복사해야 한다.
-   ⚠ 폴더 이름은 **저장소를 어느 경로에 뒀는지에 따라 달라진다**(`D--...` / `C--...`). 외우지 말고 찾는다
+2. **⚠⚠ Claude 의 실제 메모리 폴더** `%USERPROFILE%\.claude\projects\<경로 인코딩>\memory\` — 저장소 밖이다.
+   ⭐ **PC 마다 한 번 `.claude\hooks\link_memory.ps1`** 을 돌리면 그 폴더가 저장소 `.claude/memory/` 를 가리키는
+   정션이 되고, 그다음부터는 **git 으로 따라온다** (2026-09-11. 그 전에는 손 복사였고, 노트북 세션이 실제로 메모리 0개로 돌았다).
+   `preflight` 가 매 세션 연결 상태를 본다. ⚠⚠ 대가 — **메모리가 공개된다** (§15-5)
 3. **`data/external/`** — KorQuAD. ⚠⚠ CC BY-ND 라 재배포 금지다(§6 지뢰 7). Stage 10 에서 각자 받는다
-4. **`*_session.json`** — 복습·동기화 판정. 세션마다 다시 계산되므로 따라올 필요가 없다
+4. **`*_session.json`** — 복습·동기화·떠나기 전 알림 판정. 세션마다 다시 계산되므로 따라올 필요가 없다
+5. **`core.hooksPath`** — 개인정보 관문·자동 푸시(`.githooks/`)는 커밋돼 있지만 **켜는 설정은 PC 마다** 한다:
+   `git config core.hooksPath .githooks`. `preflight` 가 꺼져 있으면 알린다
+
+### 15-5. ⭐ 개인정보 관문 + 자동 푸시 (2026-09-11)
+
+**푸시를 잊는 사고**(§15-2)를 원천적으로 없애려고 커밋하자마자 올린다. 그러면 **되돌릴 틈이 없어진다** —
+그래서 올리기 전 관문이 먼저다. 구현은 `.githooks/`, 검사기는 `.githooks/privacy_scan.py`.
+
+| 지점 | 무엇을 보는가 |
+|---|---|
+| `pre-commit` | 스테이징된 **추가 줄**과 새 경로 |
+| `commit-msg` | 커밋 메시지 |
+| `pre-push` | ⭐ 올라갈 커밋 **하나하나**의 추가 줄·메시지 — 두 번째 방어선. 관문을 켜기 전에 만든 커밋도 여기서 걸린다 |
+| `post-commit` · `post-rewrite`(rebase) | 자동 푸시. rebase·merge 도중이면 하지 않는다. 잠시 끄기: `git config lab.autopush false` |
+
+**잡는 것** — **계좌번호 · 카드번호(체크섬) · 휴대전화 · 주민등록번호 형식** · **비밀번호 대입 · URL 속 자격증명** ·
+API 키·토큰(GitHub·Anthropic·OpenAI·Hugging Face·AWS·Google·Slack) · 개인키 · `C:\Users\<계정>` 경로(계정명이 드러나고 다른 PC 에서 깨진다) ·
+이 PC 의 계정명 · **남의** 이메일 · 로컬 금지어.
+⚠ 규칙은 근사다. 놓치는 것도 오탐도 있다 — **1차 방어선은 안 적는 것이다.**
+
+- 오탐 → `.githooks/privacy-allow.txt` 에 그 문자열 (커밋된다 — 무엇을 풀었는지 리뷰에 보인다)
+- PC 고유 금지어(실명·전화 등) → `.git/info/privacy-denylist` (커밋 안 된다)
+- ⭐ **내 커밋 이메일은 막지 않는다** — 커밋 신원으로도, 본문에 있어도 통과한다(`git config user.email` 을 실행 중에 허용 목록에 넣는다).
+  **남의 이메일은 여전히 막는다.** noreply 로 바꾸자고 다시 제안하지 않는다
+  > **사용자 결정 원문 (2026-09-11):** *"commit 이메일이 gmail로 이미 공개저장소에 많이 올라가있으면 굳이 뺄 필요없어. 내꺼 gmail이 노출되는게 개인 계좌나 휴대폰 번호, 비밀번호가 노출되는게 아니잖아"*
+- ⚠⚠ **fail-closed** — 검사기가 죽거나 파이썬이 없으면 **막는다.** 통과시키는 오류는 공개 사고가 된다
+- ⛔ **Claude 는 `--no-verify` 를 쓰지 않는다.** 우회는 사용자만 판단한다
+- ⚠ **관문을 켠 PC 에서는 커밋 = 공개다.** Claude 에게 커밋을 맡기는 것은 푸시를 맡기는 것과 같다 — 커밋 전에 사용자 확인
+- 검증 — `selftest.ps1`(전체)이 임시 git 저장소를 만들어 **실제 커밋·푸시로** 시험한다. 추적 파일 전체 감사는
+  `.venv/Scripts/python.exe .githooks/privacy_scan.py tree` (`--all` 이면 아직 커밋 안 한 새 파일까지)
+
+### 15-6. 떠나기 전 점검 (Stop 훅)
+
+`leave_check.ps1` — Claude 응답이 끝날 때마다 **커밋 안 된 변경**과 **올라가지 않은 커밋**을 보고, 있으면 화면에 한 줄 띄운다
+(JSON `systemMessage`). **막지 않는다.** 같은 상태면 **20분에 한 번**만 — 코드를 짜는 동안은 늘 미커밋이라 매번 띄우면 아무도 안 읽는다.
+
+⚠ 왜 떠나는 쪽인가 — `sync_check` 는 원격만 본다. **PC A 에 두고 온 작업은 PC B 에서 보이지 않는다**(§15-2).

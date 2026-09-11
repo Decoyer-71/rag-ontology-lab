@@ -46,6 +46,8 @@ if (-not $root) {
 }
 
 $bad = New-Object System.Collections.Generic.List[string]
+# ⚠ warn 은 bad 와 다르다 — 코드를 돌리는 데는 지장이 없지만 두 PC 운영에 구멍이 나는 것들
+$warn = New-Object System.Collections.Generic.List[string]
 $ok = New-Object System.Collections.Generic.List[string]
 
 # ── ① 파이썬 ────────────────────────────────────────────────────────────────
@@ -72,7 +74,8 @@ if (Test-Path -LiteralPath $py) {
 }
 
 # ── ③ 훅 배선 ───────────────────────────────────────────────────────────────
-foreach ($h in @('guard_handson.ps1', 'guard_spoiler.ps1', 'guard_claim.ps1', '_common.ps1')) {
+foreach ($h in @('guard_handson.ps1', 'guard_spoiler.ps1', 'guard_claim.ps1', 'guard_review.ps1', 'guard_sync.ps1',
+                 'session_start.ps1', 'leave_check.ps1', '_common.ps1')) {
     $hp = Join-Path $root ".claude\hooks\$h"
     if (-not (Test-Path -LiteralPath $hp)) { $bad.Add("훅 누락: $h") }
 }
@@ -106,10 +109,40 @@ if (-not $remote) {
     $ok.Add("git 원격 설정됨")
 }
 
+# ── ⑦ 메모리 정션 (§15-4) — 안 돼 있으면 이 PC 의 세션은 규율 기억 없이 돈다 ────────
+try {
+    $ms = Get-MemoryLinkStatus -Root $root
+    switch ($ms.State) {
+        'linked'    { $ok.Add("메모리 정션") }
+        'elsewhere' { $warn.Add("메모리 폴더가 저장소가 아닌 곳을 가리킵니다 → .claude\hooks\link_memory.ps1 -Check") }
+        default     { $warn.Add("메모리가 저장소와 연결돼 있지 않습니다 — 이 PC 의 세션은 규율 기억 없이 돕니다 → .claude\hooks\link_memory.ps1 (PC 마다 한 번)") }
+    }
+} catch { }
+
+# ── ⑧ 개인정보 관문 · 커밋 신원 존재 (§15-5) ───────────────────────────────────────
+# ⚠⚠ `[string](& git ...)` 로 받지 않는다 — PS 5.1 은 출력이 없으면 $null 을 돌려주고, 거기에 .Trim() 을 부르면
+#    SilentlyContinue 아래서 if 문 전체가 조용히 건너뛰어진다 (§6 지뢰 14 · 2026-09-11 이 경고가 실제로 사라졌다)
+$hooksPath = ''
+$email = ''
+try {
+    $hooksPath = (& git -C $root config core.hooksPath 2>$null | Out-String).Trim()
+    $email = (& git -C $root config user.email 2>$null | Out-String).Trim()
+} catch { }
+if ($hooksPath -match '\.githooks[\\/]?$') {
+    $ok.Add("개인정보 관문·자동 푸시")
+} else {
+    $warn.Add("개인정보 관문·자동 푸시가 꺼져 있습니다 → git config core.hooksPath .githooks (PC 마다 한 번, docs/SETUP.md §5-2)")
+}
+# ⚠ 이메일이 noreply 인지는 보지 않는다 — 공개는 사용자가 허용했다(2026-09-11). 비어 있으면 커밋이 실패하니 그것만 본다
+if (-not $email) {
+    $warn.Add("커밋 신원(user.email)이 없습니다 — 커밋이 실패합니다 (docs/SETUP.md §5-1)")
+}
+
 # ── 출력 ────────────────────────────────────────────────────────────────────
 $out = New-Object System.Collections.Generic.List[string]
 $out.Add("[preflight] 환경 자가진단")
 if ($ok.Count -gt 0) { $out.Add("  ✅ " + ($ok -join ' · ')) }
+foreach ($w in $warn) { $out.Add("  ⚠ $w") }
 if ($bad.Count -gt 0) {
     foreach ($b in $bad) { $out.Add("  ⛔ $b") }
     $out.Add("  → 조치는 docs/SETUP.md 에 있습니다. ⚠ 고치기 전에 코드를 돌리지 마십시오.")

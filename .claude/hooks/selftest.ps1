@@ -15,7 +15,7 @@
       exit 0 = 통과시킴 / exit 2 = 차단함
 
   사용:
-      .claude\hooks\selftest.ps1          전체
+      .claude\hooks\selftest.ps1          전체 (임시 git 저장소로 관문·자동 푸시·자동 받기까지 — 수십 초)
       .claude\hooks\selftest.ps1 -Quick   핵심만 (SessionStart 에서 자동 호출)
 #>
 
@@ -404,6 +404,218 @@ finally {
     if ($null -ne $syncSaved) {
         [System.IO.File]::WriteAllText($syncPath, $syncSaved, (New-Object System.Text.UTF8Encoding($false)))
     }
+}
+
+# ═══════════════════════════════════════════════════════════════════════════
+
+#  샌드박스 — 임시 git 저장소로 **실제 동작**을 본다 (2026-09-11 추가, §15-3 · §15-5 · §15-6)
+# ═══════════════════════════════════════════════════════════════════════════
+#
+# ⚠⚠ 원격을 건드리는 시험을 실제 저장소에서 하면 그건 시험이 아니라 사고다.
+#    임시 폴더에 bare 원격 + 클론을 만들어 거기서만 하고, 끝나면 통째로 지운다.
+# ⚠⚠ 훅을 부를 때 CLAUDE_PROJECT_DIR 을 반드시 샌드박스로 바꾼다 — 안 그러면 훅이
+#    **실제 저장소**를 루트로 잡고, sync_check 의 자동 받기가 실제 저장소에서 돈다.
+# ⚠ 가짜 개인정보는 전부 **조립**한다. 글자 그대로 적으면 이 파일을 커밋할 때 관문에 걸린다.
+# ⚠ git 인자는 배열로 넘긴다 — PowerShell 이 `-d`·`--hard` 를 함수 매개변수로 오인하지 않게.
+
+function CheckBool {
+    param([string]$Name, [bool]$Ok, [string]$Detail = '')
+    if ($Ok) {
+        $script:pass++
+    } else {
+        $script:fail++
+        $d = ''
+        if ($Detail) { $d = ' — ' + (($Detail -split "`n" | Where-Object { $_.Trim() } | Select-Object -First 3) -join ' / ') }
+        $script:failMsgs.Add("  ⛔ $Name$d")
+    }
+}
+
+$sandbox   = Join-Path ([System.IO.Path]::GetTempPath()) ('lab-selftest-' + [guid]::NewGuid().ToString('N').Substring(0, 8))
+$remote    = Join-Path $sandbox 'remote.git'
+$realHooks = (Join-Path $root '.githooks').Replace('\', '/')
+$realPy    = Join-Path $root '.venv\Scripts\python.exe'
+$at        = '@'
+$fakeMail  = 'some.one' + $at + 'gmail' + '.com'
+$okMail    = 'selftest' + $at + 'example.invalid'
+$savedProjectDir = $env:CLAUDE_PROJECT_DIR
+$savedLabPy      = $env:LAB_PYTHON
+$script:gitOut   = ''
+
+function G([string]$Dir, [string[]]$A) {
+    $script:gitOut = (& git -C $Dir @A 2>&1 | Out-String)
+    return $LASTEXITCODE
+}
+function GOut([string]$Dir, [string[]]$A) {
+    return ((& git -C $Dir @A 2>$null | Out-String).Trim())
+}
+function New-Clone([string]$Name) {
+    $d = Join-Path $sandbox $Name
+    $null = & git clone --quiet $remote $d 2>&1
+    $null = G $d @('config', 'user.name', 'selftest')
+    $null = G $d @('config', 'user.email', $okMail)
+    return $d
+}
+function Add-Commit([string]$Dir, [string]$File, [string]$Content, [string]$Msg) {
+    [System.IO.File]::WriteAllText((Join-Path $Dir $File), $Content, (New-Object System.Text.UTF8Encoding($false)))
+    $null = G $Dir @('add', '--', $File)
+    return (G $Dir @('commit', '--quiet', '-m', $Msg))
+}
+function CommitCount([string]$Dir) { return [int](GOut $Dir @('rev-list', '--count', 'HEAD')) }
+function HeadOf([string]$Dir) { return (GOut $Dir @('rev-parse', 'HEAD')) }
+function RemoteHead { return (GOut $remote @('rev-parse', 'main')) }
+function Invoke-Ps([string]$Script, [string]$StdIn = '') {
+    if ($StdIn) {
+        return ($StdIn | & powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File $Script 2>&1 | Out-String)
+    }
+    return (& powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File $Script 2>&1 | Out-String)
+}
+
+try {
+    New-Item -ItemType Directory -Path $sandbox -Force | Out-Null
+    $null = & git init --quiet --bare --initial-branch=main $remote 2>&1
+    $a = New-Clone 'a'
+    $null = Add-Commit $a 'README.md' "seed`n" 'seed'
+    $null = G $a @('push', '--quiet', '-u', 'origin', 'main')
+
+    # ── 개인정보 관문 — 규칙 단위 ─────────────────────────────────────────────
+    $unit = (& $realPy (Join-Path $root '.githooks\privacy_scan.py') selftest 2>&1 | Out-String)
+    CheckBool "privacy: 규칙 단위 시험 (privacy_scan.py selftest)" ($LASTEXITCODE -eq 0) $unit
+
+    # ── 개인정보 관문 + 자동 푸시 — 실제 git 훅으로 ──────────────────────────
+    $null = G $a @('config', 'core.hooksPath', $realHooks)
+
+    $n0 = CommitCount $a
+    $null = Add-Commit $a 'ok.md' "한빛텔레콤 LTE-S-33 요금제`n" 'docs: clean'
+    CheckBool "privacy: 깨끗한 커밋은 통과" ((CommitCount $a) -eq ($n0 + 1)) $script:gitOut
+    CheckBool "auto-push: 커밋하자마자 원격에 올라감" ((RemoteHead) -eq (HeadOf $a)) $script:gitOut
+
+    $leaks = @(
+        @{ n = '이메일';          v = ('연락 ' + $fakeMail) },
+        @{ n = 'GitHub 토큰';     v = ('token=ghp_' + ('A1b2' * 9)) },
+        @{ n = '이 PC 계정 경로'; v = ('C:' + '\Users\' + $env:USERNAME + '\AppData') },
+        @{ n = '계좌번호';        v = ('입금 110' + '-123-' + '456789') },
+        @{ n = '비밀번호 대입';   v = ('password=' + 'hunter22') }
+    )
+    foreach ($lk in $leaks) {
+        $n0 = CommitCount $a
+        $null = Add-Commit $a 'leak.md' ($lk.v + "`n") 'docs: leak'
+        CheckBool "privacy: $($lk.n) 든 커밋은 차단" ((CommitCount $a) -eq $n0) $script:gitOut
+        $null = G $a @('reset', '--quiet', '--hard', 'HEAD')
+    }
+
+    $n0 = CommitCount $a
+    $null = Add-Commit $a 'ok2.md' "x`n" ('docs: 문의 ' + $fakeMail)
+    CheckBool "privacy: 커밋 메시지의 이메일은 차단 (commit-msg)" ((CommitCount $a) -eq $n0) $script:gitOut
+    $null = G $a @('reset', '--quiet', '--hard', 'HEAD')
+
+    # ⭐ 내 커밋 이메일은 막지 않는다 — 신원으로도, 본문에 있어도 (사용자 결정 2026-09-11)
+    #    남의 이메일은 여전히 막는다
+    $null = G $a @('config', 'user.email', $fakeMail)
+    $n0 = CommitCount $a
+    $null = Add-Commit $a 'me.md' ('연락처 ' + $fakeMail + "`n") 'docs: my contact'
+    CheckBool "privacy: 내 커밋 이메일은 신원·본문 모두 통과 (사용자 결정)" ((CommitCount $a) -eq ($n0 + 1)) $script:gitOut
+    $n0 = CommitCount $a
+    $null = Add-Commit $a 'other.md' ('연락처 other.person' + $at + 'gmail' + '.com' + "`n") 'docs: other contact'
+    CheckBool "privacy: 남의 이메일은 여전히 차단" ((CommitCount $a) -eq $n0) $script:gitOut
+    $null = G $a @('reset', '--quiet', '--hard', 'HEAD')
+    $null = G $a @('config', 'user.email', $okMail)
+
+    # ⚠⚠ 두 번째 방어선 — 훅을 켜기 전에 만든 커밋도 푸시에서 걸려야 한다
+    $null = G $a @('config', '--unset', 'core.hooksPath')
+    $null = Add-Commit $a 'old.md' ('token=ghp_' + ('Z9y8' * 9) + "`n") 'docs: before hooks'
+    $null = G $a @('config', 'core.hooksPath', $realHooks)
+    $before = RemoteHead
+    $rc = G $a @('push', '--quiet')
+    CheckBool "privacy: 훅 켜기 전 커밋도 pre-push 가 차단" (($rc -ne 0) -and ((RemoteHead) -eq $before)) $script:gitOut
+    $null = G $a @('reset', '--quiet', '--hard', '@{u}')
+
+    # 자동 푸시 끄기 스위치 — 검사는 하되 올리지 않는다
+    $null = G $a @('config', 'lab.autopush', 'false')
+    $before = RemoteHead
+    $null = Add-Commit $a 'ok4.md' "x`n" 'docs: autopush off'
+    CheckBool "auto-push: lab.autopush=false 면 올리지 않음" (((RemoteHead) -eq $before) -and ((HeadOf $a) -ne $before)) $script:gitOut
+    $null = G $a @('config', '--unset', 'lab.autopush')
+    $null = G $a @('push', '--quiet')
+
+    # 실제 사용 형태 — 상대경로 hooksPath(.githooks). 훅 폴더를 복사해 $0 해석을 본다
+    Copy-Item -LiteralPath (Join-Path $root '.githooks') -Destination (Join-Path $a '.githooks') -Recurse
+    $null = G $a @('config', 'core.hooksPath', '.githooks')
+    $env:LAB_PYTHON = $realPy.Replace('\', '/')
+    $n0 = CommitCount $a
+    $null = Add-Commit $a 'leak2.md' ('연락 ' + $fakeMail + "`n") 'docs: leak rel'
+    CheckBool "privacy: 상대경로 hooksPath 에서도 차단" ((CommitCount $a) -eq $n0) $script:gitOut
+    $null = G $a @('reset', '--quiet', '--hard', 'HEAD')
+    $n0 = CommitCount $a
+    $null = Add-Commit $a 'ok5.md' "x`n" 'docs: clean rel'
+    CheckBool "privacy: 상대경로 hooksPath 에서 깨끗한 커밋 통과" ((CommitCount $a) -eq ($n0 + 1)) $script:gitOut
+    $env:LAB_PYTHON = $savedLabPy
+    $null = G $a @('config', 'core.hooksPath', $realHooks)
+
+    # ── sync_check 자동 받기 (§15-3) ────────────────────────────────────────
+    $b = New-Clone 'b'
+    $bHooks = Join-Path $b '.claude\hooks'
+    New-Item -ItemType Directory -Path $bHooks -Force | Out-Null
+    New-Item -ItemType Directory -Path (Join-Path $b '.claude\state') -Force | Out-Null
+    Copy-Item -Path (Join-Path $startDir '*.ps1') -Destination $bHooks
+    $bSync  = Join-Path $bHooks 'sync_check.ps1'
+    $bState = Join-Path $b '.claude\state\sync_session.json'
+    $env:CLAUDE_PROJECT_DIR = $b
+
+    $null = Add-Commit $a 'from-a.md' "x`n" 'docs: from a'
+    $out = Invoke-Ps $bSync
+    $st = Get-Content -LiteralPath $bState -Raw -Encoding UTF8 | ConvertFrom-Json
+    CheckBool "sync: behind·깨끗하면 자동으로 받는다 (ff-only)" (((HeadOf $b) -eq (RemoteHead)) -and ($st.state -eq 'clean') -and ([int]$st.pulled -ge 1)) $out
+
+    $null = Add-Commit $a 'from-a2.md' "x`n" 'docs: from a 2'
+    Add-Content -LiteralPath (Join-Path $b 'README.md') -Value 'local edit'
+    $headB = HeadOf $b
+    $out = Invoke-Ps $bSync
+    $st = Get-Content -LiteralPath $bState -Raw -Encoding UTF8 | ConvertFrom-Json
+    CheckBool "sync: 미커밋 변경이 있으면 받지 않는다" (((HeadOf $b) -eq $headB) -and ($st.state -eq 'behind') -and ([int]$st.dirty -ge 1)) $out
+    $null = G $b @('checkout', '--', 'README.md')
+
+    $null = Add-Commit $b 'from-b.md' "x`n" 'docs: from b'
+    $headB = HeadOf $b
+    $out = Invoke-Ps $bSync
+    $st = Get-Content -LiteralPath $bState -Raw -Encoding UTF8 | ConvertFrom-Json
+    CheckBool "sync: 갈라지면 자동으로 합치지 않는다" (((HeadOf $b) -eq $headB) -and ($st.state -eq 'diverged')) $out
+
+    # ── 떠나기 전 점검 (§15-6) ──────────────────────────────────────────────
+    $bLeave      = Join-Path $bHooks 'leave_check.ps1'
+    $bLeaveState = Join-Path $b '.claude\state\leave_session.json'
+    $null = G $b @('fetch', '--quiet')
+    $null = G $b @('reset', '--quiet', '--hard', '@{u}')
+    Remove-Item -LiteralPath $bLeaveState -Force -ErrorAction SilentlyContinue
+
+    $out = Invoke-Ps $bLeave '{}'
+    CheckBool "leave: 깨끗하면 조용하다" (-not ($out -match 'systemMessage')) $out
+    Add-Content -LiteralPath (Join-Path $b 'README.md') -Value 'wip'
+    $out = Invoke-Ps $bLeave '{}'
+    CheckBool "leave: 미커밋이 있으면 알린다" ($out -match 'systemMessage') $out
+    $out = Invoke-Ps $bLeave '{}'
+    CheckBool "leave: 같은 상태면 곧바로 다시 알리지 않는다 (소음 방지)" (-not ($out -match 'systemMessage')) $out
+    $null = G $b @('commit', '--quiet', '-am', 'wip')
+    $out = Invoke-Ps $bLeave '{}'
+    CheckBool "leave: 올라가지 않은 커밋이 생기면 곧바로 알린다" ($out -match 'systemMessage') $out
+    Remove-Item -LiteralPath $bLeaveState -Force -ErrorAction SilentlyContinue
+    $out = Invoke-Ps $bLeave '{"stop_hook_active":true}'
+    CheckBool "leave: stop_hook_active 면 아무것도 안 한다 (반복 방지)" (-not ($out -match 'systemMessage')) $out
+
+    # 관문을 켠 PC 면 「커밋하면 자동으로 올라간다」고 안내해야 한다
+    # (2026-09-11: `[string](& git ...)` 이 $null 이라 이 분기가 조용히 죽어 있었다 — §6 지뢰 14)
+    $null = G $b @('reset', '--quiet', '--hard', '@{u}')
+    $null = G $b @('config', 'core.hooksPath', $realHooks)
+    Remove-Item -LiteralPath $bLeaveState -Force -ErrorAction SilentlyContinue
+    Add-Content -LiteralPath (Join-Path $b 'README.md') -Value 'wip2'
+    $out = Invoke-Ps $bLeave '{}'
+    $msg = ''
+    try { $msg = [string](($out | ConvertFrom-Json).systemMessage) } catch { }
+    CheckBool "leave: 관문을 켠 PC 면 「커밋하면 자동으로 올라간다」고 안내" ($msg -match '자동으로') $out
+}
+finally {
+    $env:CLAUDE_PROJECT_DIR = $savedProjectDir
+    $env:LAB_PYTHON = $savedLabPy
+    Remove-Item -LiteralPath $sandbox -Recurse -Force -ErrorAction SilentlyContinue
 }
 
 # ═══════════════════════════════════════════════════════════════════════════

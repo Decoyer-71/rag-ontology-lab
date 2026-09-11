@@ -65,9 +65,9 @@ secrets.json
 # review_session.json 은 SessionStart 마다 다시 계산된다. PC 마다 달라야 한다.
 # ⚠ review.json(카드·간격·건너뛴 기록)과 review_log.json(인출 결과)은 **커밋한다** —
 #   그게 쌓인 것이 §13-2 의 근거가 된다.
-.claude/state/review_session.json
-# sync_session.json 도 같다 — 원격 동기화 판정은 PC 마다·세션마다 다시 잰다 (§15)
-.claude/state/sync_session.json
+# sync_session.json(원격 동기화 판정)·leave_session.json(떠나기 전 알림 간격)도 같다 —
+# PC 마다·세션마다 다시 잰다 (§15). 새 *_session.json 도 자동으로 여기 걸리게 글롭으로 둔다.
+.claude/state/*_session.json
 
 # ── 스크래치 ─────────────────────────────────────────────
 scratch/

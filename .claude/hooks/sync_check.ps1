@@ -15,10 +15,16 @@
   복습 카드의 `due`·`interval_days`·`history` 는 카드마다 바뀌므로 **거의 확실히 충돌한다.**
   그리고 그건 「어느 쪽이 맞는가」를 사람이 판단해야 하는 종류의 충돌이다.
 
-  ⚠ 하는 일은 셋뿐이다:
-    ① `git fetch` 로 원격을 확인한다 (읽기 전용. 아무것도 바꾸지 않는다)
-    ② behind/ahead 를 세어 `.claude/state/sync_session.json` 에 쓴다
-    ③ 사람이 읽을 배너를 찍는다
+  ⚠ 하는 일은 넷이다:
+    ① `git fetch` 로 원격을 확인한다
+    ② ⭐ **안전할 때만 받는다** — behind 이고, 내 쪽에 새 커밋이 없고, 추적 파일 변경이 0 일 때만
+       `git merge --ff-only`. 병합이 일어날 수 없는 조건이라 잃는 데이터가 없다 (2026-09-11 추가)
+    ③ behind/ahead/미커밋 수를 `.claude/state/sync_session.json` 에 쓴다
+    ④ 사람이 읽을 배너를 찍는다
+
+  ⚠⚠ 왜 ②를 여기서 하는가 — 복습 계획(review_due)이 **받은 뒤의** review.json 을 봐야 한다.
+     그래서 session_start.ps1 이 이 스크립트를 **맨 먼저** 부른다 (CLAUDE.md §15-3).
+     갈라진 이력(diverged)은 자동으로 합치지 않는다 — 그건 사람이 판단한다.
 
   ⚠⚠ fail-open — 오프라인이거나 fetch 가 실패하면 **아무것도 막지 않는다.**
      그래서 판정 파일을 **맨 먼저 지우고** 시작한다. 훅이 중간에 죽어도
@@ -99,6 +105,29 @@ try {
         }
     } catch { }
 
+    # ── 추적 파일의 미커밋 변경 수 — 자동 받기의 전제이자, 두고 가는 작업의 신호 ──
+    # ⚠ --no-optional-locks : 사용자가 동시에 git 을 써도 index.lock 충돌을 만들지 않는다
+    $dirty = 0
+    try {
+        $dirty = @(& git --no-optional-locks status --porcelain --untracked-files=no 2>$null | Where-Object { $_ }).Count
+    } catch { }
+
+    # ── ⭐ 자동 받기 — fast-forward 만 ─────────────────────────────────────────
+    # ⚠⚠ 조건 셋이 모두 참일 때만 한다:
+    #   · behind > 0  — 받을 것이 있다
+    #   · ahead = 0   — 내 쪽에 새 커밋이 없다 = 병합이 일어날 수 없다
+    #   · dirty = 0   — 덮어쓸 작업이 없다 (추적 안 되는 파일은 git 이 스스로 지킨다)
+    # 이 조건에서 --ff-only 는 「브랜치 포인터를 앞으로 당기기」만 한다. fetch 가 실패해도
+    # 마지막으로 받아 둔 원격 기준으로 당기는 것이라 안전하다.
+    $pulled = 0
+    if ($behind -gt 0 -and $ahead -eq 0 -and $dirty -eq 0) {
+        $null = & git merge --ff-only --quiet $upstream 2>&1
+        if ($LASTEXITCODE -eq 0) {
+            $pulled = $behind
+            $behind = 0
+        }
+    }
+
     $state = 'clean'
     if     ($behind -gt 0 -and $ahead -gt 0) { $state = 'diverged' }
     elseif ($behind -gt 0)                   { $state = 'behind' }
@@ -110,6 +139,8 @@ try {
         upstream    = $upstream
         behind      = $behind
         ahead       = $ahead
+        dirty       = $dirty
+        pulled      = $pulled
         fetch_ok    = $fetchOk
         # ⚠⚠ guard_sync.ps1 이 읽는 값이다. 이름을 바꾸면 훅도 같이 고쳐라.
         state       = $state
@@ -118,6 +149,10 @@ try {
     # ── 배너 ────────────────────────────────────────────────────────────────
     if (-not $fetchOk) {
         Write-Output "[sync] ⚠ 원격 확인 실패(오프라인?). **마지막으로 알던 값**으로 판단합니다 — behind $behind · ahead $ahead"
+    }
+
+    if ($pulled -gt 0) {
+        Write-Output "[sync] ⬇ 다른 PC 작업 $pulled 커밋을 받았습니다 (fast-forward — 병합 없음)"
     }
 
     switch ($state) {
@@ -130,13 +165,25 @@ try {
         }
         'behind' {
             Write-Output "[sync] ⛔ 원격이 $behind 커밋 앞서 있습니다 — **다른 PC 에서 한 작업이 안 받아져 있습니다**"
-            Write-Output "       git pull --rebase 를 먼저 하십시오. 지금 진행하면 진도·복습 이력이 충돌합니다"
+            if ($dirty -gt 0) {
+                Write-Output "       미커밋 변경 $dirty 파일 때문에 자동으로 받지 못했습니다 → 커밋한 뒤 git pull --rebase"
+            } else {
+                Write-Output "       자동 받기(fast-forward)가 실패했습니다 → git pull --rebase"
+            }
+            Write-Output "       지금 진행하면 진도·복습 이력이 충돌합니다"
         }
         'diverged' {
             Write-Output "[sync] ⛔⛔ 이력이 갈라졌습니다 — 로컬 $ahead 개 / 원격 $behind 개"
             Write-Output "       git pull --rebase 로 합치십시오. ⚠ progress.json·review.json 충돌은"
             Write-Output "       더 진행된 쪽을 택하고 completed_stages 는 합집합으로 만듭니다 (docs/SETUP.md §8)"
+            if ($dirty -gt 0) {
+                Write-Output "       ⚠ 미커밋 변경 $dirty 파일이 있으면 pull --rebase 가 거부됩니다 — 먼저 커밋하십시오"
+            }
         }
+    }
+
+    if ($dirty -gt 0 -and @('clean', 'ahead') -contains $state) {
+        Write-Output "[sync] ⚠ 커밋 안 된 변경 $dirty 파일이 남아 있습니다 — 다른 PC 로 옮기기 전에 커밋하십시오"
     }
 } finally {
     try { Pop-Location } catch { }

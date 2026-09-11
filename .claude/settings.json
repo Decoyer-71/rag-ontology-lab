@@ -89,32 +89,26 @@
           },
           {
             "type": "command",
-            "command": "powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File \"$CLAUDE_PROJECT_DIR/.claude/hooks/session_banner.ps1\"",
-            "timeout": 30
-          },
-          {
-            "type": "command",
-            "command": "powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File \"$CLAUDE_PROJECT_DIR/.claude/hooks/commit_watch.ps1\"",
-            "timeout": 60,
-            "statusMessage": "§14: 학습 커밋 따라잡기"
-          },
-          {
-            "type": "command",
-            "command": "powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File \"$CLAUDE_PROJECT_DIR/.claude/hooks/review_due.ps1\"",
-            "timeout": 60,
-            "statusMessage": "§14: 공백기간 반영 복습 계획"
-          },
-          {
-            "type": "command",
-            "command": "powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File \"$CLAUDE_PROJECT_DIR/.claude/hooks/sync_check.ps1\"",
-            "timeout": 45,
-            "statusMessage": "§15: 원격 동기화 상태 확인 (PC 두 대)"
+            "command": "powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File \"$CLAUDE_PROJECT_DIR/.claude/hooks/session_start.ps1\"",
+            "timeout": 120,
+            "statusMessage": "§15·§14: 원격 받기 → 진도 → 학습 커밋 → 복습 계획 (순서 보장)"
           },
           {
             "type": "command",
             "command": "powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File \"$CLAUDE_PROJECT_DIR/.claude/hooks/selftest.ps1\" -Quick",
             "timeout": 120,
             "statusMessage": "자가 시험: 대필 차단 훅이 실제로 동작하는지"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File \"$CLAUDE_PROJECT_DIR/.claude/hooks/leave_check.ps1\"",
+            "timeout": 20
           }
         ]
       }

@@ -113,6 +113,19 @@ if (-not $what) { Pass }
 # ── 차단 ────────────────────────────────────────────────────────────────────
 $behind = [int]$sync.behind
 $ahead  = [int]$sync.ahead
+$dirty  = 0
+try { $dirty = [int]$sync.dirty } catch { }
+
+# ⚠ 미커밋 변경이 있으면 sync_check 가 자동으로 못 받았고, pull --rebase 도 거부된다
+$todo = if ($dirty -gt 0) {
+    @"
+     미커밋 변경 $dirty 파일이 있어 자동으로 받지 못했습니다. 커밋한 뒤:
+     git pull --rebase
+     (커밋하기 싫으면: git stash → git pull --rebase → git stash pop)
+"@
+} else {
+    "     git pull --rebase"
+}
 
 $diag = if ($state -eq 'diverged') {
     "이력이 갈라졌습니다 — 로컬만 있는 커밋 $ahead 개 / 원격만 있는 커밋 $behind 개"
@@ -145,9 +158,9 @@ $msg = @"
 지금 진행하면 그것들이 양쪽에서 갈라지고, **되돌리는 비용이 pull 한 번보다 훨씬 큽니다.**
 
 ■ 지금 해야 할 것
-     git pull --rebase
-  그다음 이 세션을 다시 시작하거나, 아래 명령으로 판정만 갱신하십시오:
-     powershell -NoProfile -ExecutionPolicy Bypass -File .claude\hooks\sync_check.ps1
+$todo
+  그다음 이 세션을 다시 시작하거나, 아래 명령으로 판정과 복습 계획을 다시 세우십시오:
+     powershell -NoProfile -ExecutionPolicy Bypass -File .claude\hooks\session_start.ps1
 $extra
 ■ 막지 않는 것
   복습(review 스킬)·힌트·기록은 그대로 됩니다. 막은 것은 **새 단계를 여는 행위**뿐입니다.
